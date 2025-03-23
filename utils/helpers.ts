@@ -58,3 +58,9 @@ export const createResetPasswordToken = (user: any) => {
 
 //   return { verificationCode, verificationToken };
 // };
+
+export function add(a: number, b: number) {
+  const answer = a + b;
+
+  return answer;
+}

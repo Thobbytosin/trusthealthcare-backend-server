@@ -40,15 +40,15 @@ export const registerUser = catchAsyncError(
     const isUserExists = await User.findOne({ email });
 
     if (isUserExists) {
-      return next(new ErrorHandler("Account already exists", 400));
+      return next(new ErrorHandler("Account already exists", 409));
     }
 
     if (!isEmailValid.test(email)) {
-      return next(new ErrorHandler("Please enter a valid email", 401));
+      return next(new ErrorHandler("Please enter a valid email", 400));
     }
 
     if (!isPasswordStrong(password)) {
-      return next(new ErrorHandler("Password security is too weak", 401));
+      return next(new ErrorHandler("Password security is too weak", 400));
     }
 
     const hashedPassword = bcryptjs.hashSync(password, 10);
@@ -85,7 +85,7 @@ export const registerUser = catchAsyncError(
         verificationTokenOptions
       );
 
-      res.status(201).json({
+      res.status(200).json({
         success: true,
         message:
           "A 6-digit verification code has been sent to your email address.",

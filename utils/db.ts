@@ -12,7 +12,7 @@ const connectToDB = async () => {
       console.log("DATABASE CONNECTED SUCCESSFULLY TO:" + data.connection.host);
     });
   } catch (error) {
-    console.log("DATABASE ERROR:", error);
+    console.log("DATABASE CONNECTION ERROR:", error);
     setTimeout(connectToDB, 5000); // reconnect to database after 5 seconds incase of an error
   }
 };
