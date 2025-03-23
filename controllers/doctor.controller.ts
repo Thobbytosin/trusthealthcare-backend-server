@@ -230,7 +230,7 @@ export const getAllDoctorsList = catchAsyncError(
       "-securityAnswer -phone -altPhone -hospital "
     );
     // .skip(skip)
-    // .limit(limit);
+    // .limit(limit);   // hide for now
 
     if (!doctors) return next(new ErrorHandler("Error: Doctor not found", 404));
 
