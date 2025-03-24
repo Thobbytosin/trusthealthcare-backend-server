@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const disconnectDB = async () => {
   try {
+    console.log("Attempting to disconnect...");
     await mongoose.connection.close();
     console.log("DATABASE DISCONNECTED SUCCESSFULLY");
   } catch (error) {

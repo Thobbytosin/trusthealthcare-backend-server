@@ -12,6 +12,8 @@ const config: Config = {
   testMatch: ["**/?(*.)+(spec|test).[tj]s?(x)"],
   clearMocks: true,
   verbose: true,
+  forceExit: true,
+  detectOpenHandles: true,
 };
 
 export default config;

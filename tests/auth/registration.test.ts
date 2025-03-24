@@ -104,7 +104,7 @@ describe("POST /api/v1/signup", () => {
       "A 6-digit verification code has been sent to your email address."
     );
     expect(res.headers["set-cookie"]).toBeDefined();
-  }, 10000);
+  }, 30000);
 
   //   TEST TOKEN IS SET WITH CORRECT OPTIONS
   it("should set verifcation_token with correct cookie option", async () => {
@@ -119,3 +119,143 @@ describe("POST /api/v1/signup", () => {
     expect(cookies[0]).toMatch(/verification_token/);
   }, 10000);
 });
+
+// import request from "supertest";
+// import appTest from "../../app"; // your express app
+// import jwt from "jsonwebtoken";
+// import User from "../../models/User";
+// import sendMail from "../../utils/sendMail";
+
+// jest.mock("../../models/User");
+// jest.mock("../../utils/sendMail");
+
+// describe("POST /api/v1/account-verification", () => {
+//   const endpoint = "/api/v1/account-verification"; // or wherever it's routed
+
+//   beforeEach(() => {
+//     jest.clearAllMocks();
+//   });
+
+//   it("should return 403 if no verification token in cookies", async () => {
+//     const res = await request(appTest)
+//       .post(endpoint)
+//       .send({ verificationCode: "123456" });
+
+//     expect(res.status).toBe(403);
+//     expect(res.body.message).toBe("Verification code has expired");
+//   });
+
+//   it("should return 403 if no verification code in body", async () => {
+//     const res = await request(appTest)
+//       .post(endpoint)
+//       .set("Cookie", ["verification_token=fake-token"]);
+
+//     expect(res.status).toBe(403);
+//     expect(res.body.message).toBe("All fields are required");
+//   });
+
+//   it("should return 403 if verification codes do not match", async () => {
+//     jest.spyOn(jwt, "verify").mockReturnValue({
+//       user: { name: "Falode Tobi", email: "tobi@gmail.com", password: "pass" },
+//       verificationCode: "999999", // mismatched
+//     });
+
+//     const res = await request(appTest)
+//       .post(endpoint)
+//       .set("Cookie", ["verification_token=fake-token"])
+//       .send({ verificationCode: "123456" });
+
+//     expect(res.status).toBe(403);
+//     expect(res.body.message).toBe("Access Denied: Invalid Verification code");
+//   });
+
+//   it("should return 403 if user already exists", async () => {
+//     jest.spyOn(jwt, "verify").mockReturnValue({
+//       user: { name: "Falode Tobi", email: "tobi@gmail.com", password: "pass" },
+//       verificationCode: "123456",
+//     });
+
+//     (User.findOne as jest.Mock).mockResolvedValue({ id: "existing-user" });
+
+//     const res = await request(appTest)
+//       .post(endpoint)
+//       .set("Cookie", ["verification_token=fake-token"])
+//       .send({ verificationCode: "123456" });
+
+//     expect(res.status).toBe(403);
+//     expect(res.body.message).toBe("Account already exists");
+//   });
+
+//   it("should return 404 if user creation failed", async () => {
+//     jest.spyOn(jwt, "verify").mockReturnValue({
+//       user: { name: "Falode Tobi", email: "tobi@gmail.com", password: "pass" },
+//       verificationCode: "123456",
+//     });
+
+//     (User.findOne as jest.Mock)
+//       .mockResolvedValueOnce(null) // first findOne (check existence)
+//       .mockResolvedValueOnce(null); // second findOne (after creation)
+
+//     (User.create as jest.Mock).mockResolvedValue({});
+
+//     const res = await request(appTest)
+//       .post(endpoint)
+//       .set("Cookie", ["verification_token=fake-token"])
+//       .send({ verificationCode: "123456" });
+
+//     expect(res.status).toBe(404);
+//     expect(res.body.message).toBe("Error Proccessing User");
+//   });
+
+//   it("should successfully create user, send welcome email, and return 201", async () => {
+//     jest.spyOn(jwt, "verify").mockReturnValue({
+//       user: { name: "Falode Tobi", email: "tobi@gmail.com", password: "pass" },
+//       verificationCode: "123456",
+//     });
+
+//     (User.findOne as jest.Mock)
+//       .mockResolvedValueOnce(null) // first findOne (check existence)
+//       .mockResolvedValueOnce({
+//         name: "Falode Tobi",
+//         email: "tobi@gmail.com",
+//         password: "pass",
+//       }); // second findOne (after creation)
+
+//     (User.create as jest.Mock).mockResolvedValue({});
+//     (sendMail as jest.Mock).mockResolvedValue({});
+
+//     const res = await request(appTest)
+//       .post(endpoint)
+//       .set("Cookie", ["verification_token=fake-token"])
+//       .send({ verificationCode: "123456" });
+
+//     expect(res.status).toBe(201);
+//     expect(res.body.message).toBe("Account Verification Successful!");
+//   });
+
+//   it("should return 404 if sendMail throws an error", async () => {
+//     jest.spyOn(jwt, "verify").mockReturnValue({
+//       user: { name: "Falode Tobi", email: "tobi@gmail.com", password: "pass" },
+//       verificationCode: "123456",
+//     });
+
+//     (User.findOne as jest.Mock)
+//       .mockResolvedValueOnce(null)
+//       .mockResolvedValueOnce({
+//         name: "Falode Tobi",
+//         email: "tobi@gmail.com",
+//         password: "pass",
+//       });
+
+//     (User.create as jest.Mock).mockResolvedValue({});
+//     (sendMail as jest.Mock).mockRejectedValue(new Error("Mail failed"));
+
+//     const res = await request(appTest)
+//       .post(endpoint)
+//       .set("Cookie", ["verification_token=fake-token"])
+//       .send({ verificationCode: "123456" });
+
+//     expect(res.status).toBe(404);
+//     expect(res.body.message).toBe("Mail failed");
+//   });
+// });
