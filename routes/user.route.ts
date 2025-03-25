@@ -27,7 +27,7 @@ userRouter.post(
   forgotPassword
 );
 userRouter.post("/reset-password", resetPassword);
-userRouter.post("/signout", updateAccessToken, isUserAuthenticated, signOut);
-userRouter.get("/me", updateAccessToken, isUserAuthenticated, getUserData);
+userRouter.post("/signout", isUserAuthenticated, updateAccessToken, signOut);
+userRouter.get("/me", isUserAuthenticated, updateAccessToken, getUserData);
 
 export default userRouter;

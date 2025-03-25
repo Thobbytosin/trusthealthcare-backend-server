@@ -17,14 +17,14 @@ export const isUserAuthenticated = catchAsyncError(
       return next(new ErrorHandler("Access Denied: Login to proceed", 403));
 
     // verify access token
-    const decode: any = jwt.verify(
+    const decodeAccess: any = jwt.verify(
       access_token,
-      process.env.SIGN_IN_ACCESS_SECRET_KEY || ""
+      (process.env.SIGN_IN_ACCESS_SECRET_KEY as string) || ""
     );
 
-    if (!decode) return next(new ErrorHandler("Invalid token", 404));
+    if (!decodeAccess) return next(new ErrorHandler("Invalid token", 404));
 
-    req.user = decode.user;
+    req.user = decodeAccess.user;
     return next();
   }
 );

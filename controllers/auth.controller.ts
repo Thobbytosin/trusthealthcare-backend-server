@@ -91,7 +91,7 @@ export const registerUser = catchAsyncError(
           "A 6-digit verification code has been sent to your email address.",
       });
     } catch (error: any) {
-      return next(new ErrorHandler(error.message, 400));
+      return next(new ErrorHandler("Mail sending Failed", 400));
     }
   }
 );
@@ -149,7 +149,7 @@ export const accountVerification = catchAsyncError(
         .status(201)
         .json({ success: true, message: "Account Verification Successful!" });
     } catch (error: any) {
-      return next(new ErrorHandler(error.message, 404));
+      return next(new ErrorHandler("Mail sending Failed", 404));
     }
   }
 );
@@ -204,7 +204,7 @@ export const resendVerificationCode = catchAsyncError(
           "A new 6-digit verification code has been re-sent to your email address.",
       });
     } catch (error: any) {
-      return next(new ErrorHandler(error.message, 400));
+      return next(new ErrorHandler("Mail sending Failed", 400));
     }
   }
 );

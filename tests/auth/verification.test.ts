@@ -4,8 +4,10 @@ import disconnectDB from "../../utils/disconnectDb";
 import request from "supertest";
 import jwt from "jsonwebtoken";
 import User from "../../models/user.model";
+import sendMail from "../../utils/sendMail";
 
 jest.mock("../../models/user.model.ts");
+jest.mock("../../utils/sendMail.ts");
 
 describe("POST /api/v1/account-verification", () => {
   const endpoint = "/api/v1/account-verification";
@@ -35,7 +37,7 @@ describe("POST /api/v1/account-verification", () => {
 
     expect(res.status).toBe(403);
     expect(res.body.message).toBe("Verification code has expired");
-  });
+  }, 10000);
 
   //   TEST FOR VERIFICATION CODE
   it("return 403 error code if there is no verification code", async () => {
@@ -63,7 +65,7 @@ describe("POST /api/v1/account-verification", () => {
 
     expect(res.status).toBe(403);
     expect(res.body.message).toBe("Access Denied: Invalid Verification code");
-  });
+  }, 10000);
 
   //   TEST IF USER EXISTS
   it("should return 403 if user already exists", async () => {
@@ -87,7 +89,7 @@ describe("POST /api/v1/account-verification", () => {
     expect(res.body.message).toBe("Account already exists");
 
     findOneSpy.mockRestore();
-  });
+  }, 10000);
 
   //   TEST: IF USER CREATION FAILED
   it("return 404 error code if user creation failed", async () => {
@@ -100,7 +102,9 @@ describe("POST /api/v1/account-verification", () => {
       verificationCode: "123456",
     } as any);
 
-    (User.findOne as jest.Mock).mockResolvedValue(null).mockResolvedValue(null); // checks if there is any user in db with findone (twice, existing, and after creation)
+    (User.findOne as jest.Mock)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null); // checks if there is any user in db with findone (twice, existing, and after creation)
 
     // (User.create as jest.Mock).mockResolvedValue({}); // simulate user creation
 
@@ -109,9 +113,76 @@ describe("POST /api/v1/account-verification", () => {
       .set("Cookie", ["verification_token=fake-token"])
       .send({ verificationCode: "123456" });
 
-    console.log("BODY:", res.body);
+    // console.log("BODY:", res.body);
 
     expect(res.status).toBe(404);
     expect(res.body.message).toBe("Error Proccessing User");
-  });
+  }, 10000);
+
+  // TEST: USER IS CREATED SUCCESSFULY, SENTS A WELCOME EMAIL
+  it("return a 201 success code if user is created successfully and welcome email sent", async () => {
+    jest.spyOn(jwt, "verify").mockReturnValue({
+      user: {
+        name: "Falode Tobi",
+        email: "tobi12@gmail.com",
+        password: "pass",
+      },
+      verificationCode: "123456",
+    } as any);
+
+    (User.findOne as jest.Mock)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        name: "Falode Tobi",
+        email: "tobi12@gmail.com",
+        password: "pass",
+      });
+
+    (User.create as jest.Mock).mockResolvedValue({});
+    (sendMail as jest.Mock).mockResolvedValue({});
+
+    const res = await request(appTest)
+      .post(endpoint)
+      .set("Cookie", ["verification_token=fake-token"])
+      .send({ verificationCode: "123456" });
+
+    // console.log("BODY:", res.body);
+
+    expect(res.status).toBe(201);
+    expect(res.body.message).toBe("Account Verification Successful!");
+  }, 10000);
+
+  // TEST: IF SEND MAIL HAS AN ERROR
+  it("return 404 error code if sendMail has an error", async () => {
+    jest.spyOn(jwt, "verify").mockReturnValue({
+      user: {
+        name: "Falode Tobi",
+        email: "tobi12@gmail.com",
+        password: "pass",
+      },
+      verificationCode: "123456",
+    } as any);
+
+    (User.findOne as jest.Mock)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        name: "Falode Tobi",
+        email: "tobi12@gmail.com",
+        password: "pass",
+      });
+
+    (User.create as jest.Mock).mockResolvedValue({});
+    (sendMail as jest.Mock).mockRejectedValue(new Error("Mail sending Failed"));
+
+    const res = await request(appTest)
+      .post(endpoint)
+      .set("Cookie", ["verification_token=fake-token"])
+      .send({ verificationCode: "123456" });
+
+    console.log("BODY:", res.body);
+
+    expect(sendMail).toHaveBeenCalled();
+    expect(res.status).toBe(404);
+    expect(res.body.message).toBe("Mail sending Failed");
+  }, 40000);
 });

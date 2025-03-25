@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import {
   accountVerification,
+  loginUser,
   registerUser,
 } from "./controllers/auth.controller";
 import ErrorMiddleware from "./middlewares/error";
@@ -15,6 +16,7 @@ export const createTestApp = () => {
   appTest.use(cookieParser());
   appTest.post("/api/v1/signup", registerUser);
   appTest.post("/api/v1/account-verification", accountVerification);
+  appTest.post("/api/v1/login", loginUser);
 
   // unknown route
   appTest.all("*", (req, res, next) => {
