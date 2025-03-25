@@ -179,7 +179,7 @@ describe("POST /api/v1/account-verification", () => {
       .set("Cookie", ["verification_token=fake-token"])
       .send({ verificationCode: "123456" });
 
-    console.log("BODY:", res.body);
+    // console.log("BODY:", res.body);
 
     expect(sendMail).toHaveBeenCalled();
     expect(res.status).toBe(404);
