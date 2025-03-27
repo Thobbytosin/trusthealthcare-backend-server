@@ -48,7 +48,7 @@ _A secure medical appointment scheduling system_
 
 | Endpoint                         | Method | Description              | Auth Required |
 | -------------------------------- | ------ | ------------------------ | ------------- |
-| /api/v1/signup                   | POST   | Patient registration     | No            |
+| /api/v1/signup                   | POST   | User registration        | No            |
 | /api/v1/account-verification     | POST   | Email verification       | Yes           |
 | /api/v1/login                    | POST   | User Login               | No            |
 | /api/v1/resend-verification-code | POST   | Resend verification code | Yes           |
