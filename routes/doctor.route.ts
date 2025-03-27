@@ -64,8 +64,8 @@ doctorRouter.get("/get-doctors", getAllDoctorsList);
 
 doctorRouter.get(
   "/get-doctors-list-admin",
-  updateAccessToken,
   isUserAuthenticated,
+  updateAccessToken,
   authorizeRoleAdmin("administrator"),
   getAllDoctorsAdmin
 );

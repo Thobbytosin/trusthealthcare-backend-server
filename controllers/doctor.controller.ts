@@ -232,7 +232,7 @@ export const getAllDoctorsList = catchAsyncError(
     // .skip(skip)
     // .limit(limit);   // hide for now
 
-    if (!doctors) return next(new ErrorHandler("Error: Doctor not found", 404));
+    if (!doctors) return next(new ErrorHandler("Error Fetching DoctorsS", 400));
 
     res.status(200).json({
       success: true,
@@ -252,7 +252,7 @@ export const getAllDoctorsAdmin = catchAsyncError(
 
     res.status(200).json({
       success: true,
-      message: "Doctors Information retrieved",
+      message: "Admin - Doctors Information retrieved",
       doctors,
     });
   }
