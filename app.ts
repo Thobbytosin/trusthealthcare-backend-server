@@ -5,7 +5,6 @@ import cors from "cors";
 import { rateLimit } from "express-rate-limit";
 import ErrorMiddleware from "./middlewares/error";
 import userRouter from "./routes/user.route";
-import doctorRouter from "./routes/doctor.route";
 
 export const app = express();
 
@@ -40,7 +39,7 @@ const limiter = rateLimit({
 
 // ROUTES
 app.use("/api/v1/", userRouter);
-app.use("/api/v1/", doctorRouter);
+// app.use("/api/v1/", doctorRouter);
 
 // test api
 app.get("/test", (req, res) => {

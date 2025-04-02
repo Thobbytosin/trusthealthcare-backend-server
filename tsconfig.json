@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "target": "es2016",
+    "experimentalDecorators": true, // for sequelize
+    "emitDecoratorMetadata": true, // for sequelize
     "module": "commonjs",
     "rootDir": "../server", // Where your source code lives
     "outDir": "./build", // Where compiled JS should go

@@ -6,7 +6,7 @@ _A secure medical appointment scheduling system_
 
 - **Runtime**: Node.js (v18+)
 - **Framework**: Express.js
-- **Database**: MongoDB (with Mongoose ODM)
+- **Database**: MySQL (PostGreSQL)
 - **Testing**: Jest (with Supertest)
 - **File Storage**: Cloudinary
 - **Caching**: Redis
