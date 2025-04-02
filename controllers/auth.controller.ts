@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import catchAsyncError from "../middlewares/catchAsyncError";
 import ErrorHandler from "../utils/errorHandler";
-import User, { IUser } from "../models/user.model";
+import { User } from "../models/user.model";
 import {
   createResetPasswordToken,
   createVerificationToken,
@@ -18,6 +18,7 @@ import {
   verificationTokenOptions,
 } from "../utils/token";
 import { sendVerificationSMS } from "../utils/sendSms";
+import { where } from "sequelize";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ interface IRegistration {
   email: string;
   password: string;
   avatar?: string;
+  verified?: boolean;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////// USER REGISTRATION
@@ -37,7 +39,7 @@ export const registerUser = catchAsyncError(
       return next(new ErrorHandler("All fields are required", 400));
     }
 
-    const isUserExists = await User.findOne({ email });
+    const isUserExists = await User.findOne({ where: { email } });
 
     if (isUserExists) {
       return next(new ErrorHandler("Account already exists", 409));
@@ -110,10 +112,10 @@ export const accountVerification = catchAsyncError(
       return next(new ErrorHandler("All fields are required", 403));
     }
 
-    const credentials: { user: IUser; verificationCode: string } = jwt.verify(
+    const credentials: { user: User; verificationCode: string } = jwt.verify(
       verificationToken,
       process.env.JWT_VERIFICATION_SECRET_KEY as string
-    ) as { user: IUser; verificationCode: string };
+    ) as { user: User; verificationCode: string };
 
     if (credentials.verificationCode !== verificationCode) {
       return next(
@@ -123,14 +125,14 @@ export const accountVerification = catchAsyncError(
 
     const { name, email, password } = credentials.user;
 
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ where: { email } });
 
     if (userExists)
       return next(new ErrorHandler("Account already exists", 403));
 
     await User.create({ name, email, password, verified: true });
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
 
     if (!user) return next(new ErrorHandler("Error Proccessing User", 404));
 
@@ -145,16 +147,17 @@ export const accountVerification = catchAsyncError(
         templateName: "welcome-email.ejs",
       });
 
-      res
-        .status(201)
-        .json({ success: true, message: "Account Verification Successful!" });
+      res.status(201).json({
+        success: true,
+        message: "Account Verification Successful!",
+      });
     } catch (error: any) {
       return next(new ErrorHandler("Mail sending Failed", 404));
     }
   }
 );
 
-/////////////////////////////////////////////////////////////////////////////////////////////// RESEND VERIFICATION CODE
+// /////////////////////////////////////////////////////////////////////////////////////////////// RESEND VERIFICATION CODE
 export const resendVerificationCode = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const oldVerificationToken = req.cookies.verification_token;
@@ -162,10 +165,10 @@ export const resendVerificationCode = catchAsyncError(
     if (!oldVerificationToken)
       return next(new ErrorHandler("Session has expired. Try Again", 403));
 
-    const credentials: { user: IUser; verificationCode: string } = jwt.verify(
+    const credentials: { user: User; verificationCode: string } = jwt.verify(
       oldVerificationToken,
       process.env.JWT_VERIFICATION_SECRET_KEY as string
-    ) as { user: IUser; verificationCode: string };
+    ) as { user: User; verificationCode: string };
 
     // if there is no credentials (i.e token has expired). it goes to the error middleware
 
@@ -209,7 +212,7 @@ export const resendVerificationCode = catchAsyncError(
   }
 );
 
-//////////////////////////////////////////////////////////////////////////////////////////////// SIGN IN USER
+// //////////////////////////////////////////////////////////////////////////////////////////////// SIGN IN USER
 export const loginUser = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
@@ -218,7 +221,7 @@ export const loginUser = catchAsyncError(
       return next(new ErrorHandler("All fields are required", 403));
 
     // check if user exists
-    const user: IUser = await User.findOne({ email }).select("+password");
+    const user = await User.scope("withPassword").findOne({ where: { email } });
 
     if (!user) return next(new ErrorHandler("Account not found", 404));
 
@@ -233,7 +236,7 @@ export const loginUser = catchAsyncError(
     await user.save();
 
     // remove the password when sending user details to the client
-    const editedUser = await User.findOne({ email });
+    const editedUser = await User.findOne({ where: { email } });
 
     // sign in user
     if (editedUser) {
@@ -242,7 +245,7 @@ export const loginUser = catchAsyncError(
   }
 );
 
-//////////////////////////////////////////////////////////////////////////////////////////////// FORGOT PASSWORD
+// //////////////////////////////////////////////////////////////////////////////////////////////// FORGOT PASSWORD
 export const forgotPassword = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email } = req.body;
@@ -250,7 +253,7 @@ export const forgotPassword = catchAsyncError(
     if (!email) return next(new ErrorHandler("Field is required", 403));
 
     // check if user is already registered
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
 
     if (!user) return next(new ErrorHandler("Account not found", 404));
 
@@ -282,7 +285,7 @@ export const forgotPassword = catchAsyncError(
   }
 );
 
-//////////////////////////////////////////////////////////////////////////////////////////////// RESET PASSWORD
+// //////////////////////////////////////////////////////////////////////////////////////////////// RESET PASSWORD
 export const resetPassword = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const resetToken = req.cookies.reset_token;
@@ -304,7 +307,9 @@ export const resetPassword = catchAsyncError(
       return next(new ErrorHandler("Access Denied: Invalid reset code", 403));
 
     // find the account
-    const user = await User.findOne({ email: credentials.user.email });
+    const user = await User.findOne({
+      where: { email: credentials.user.email },
+    });
 
     if (!user)
       return next(
@@ -347,7 +352,7 @@ export const resetPassword = catchAsyncError(
   }
 );
 
-//////////////////////////////////////////////////////////////////////////////////////////////// SIGN OUT USER
+// //////////////////////////////////////////////////////////////////////////////////////////////// SIGN OUT USER
 export const signOut = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     res.clearCookie("access_token");
@@ -357,11 +362,11 @@ export const signOut = catchAsyncError(
   }
 );
 
-//////////////////////////////////////////////////////////////////////////////////////////////// GET USER DATA
+// //////////////////////////////////////////////////////////////////////////////////////////////// GET USER DATA
 export const getUserData = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user._id;
-    const user = await User.findById(userId);
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
     if (!user) return next(new ErrorHandler("Account not found", 404));
 
     res.status(200).json({ success: true, user });

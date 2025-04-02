@@ -3,7 +3,7 @@ import catchAsyncError from "./catchAsyncError";
 import ErrorHandler from "../utils/errorHandler";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import User, { IUser } from "../models/user.model";
+import { User } from "../models/user.model";
 
 dotenv.config();
 
@@ -34,12 +34,16 @@ export const hasPasswordChangedLast24Hours = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ where: { email } });
 
     // check if user exists
     if (!user) return next(new ErrorHandler("Account not found", 404));
 
-    const userLastResetDate: Date = new Date(user.lastPasswordReset);
+    if (user.lastPasswordReset === null) {
+      return next();
+    }
+
+    const userLastResetDate: Date = new Date(user.lastPasswordReset || "");
 
     const presentDate: Date = new Date();
 

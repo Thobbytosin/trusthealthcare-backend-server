@@ -1,0 +1,27 @@
+import { Sequelize } from "sequelize-typescript";
+import dotenv from "dotenv";
+import { User } from "../models/user.model";
+// import { User } from "../models/user.model";
+
+// load environment variables
+dotenv.config();
+
+// Initialize Sequelize with PostgreSQL
+const sequelize = new Sequelize({
+  database: process.env.DB_NAME,
+  port: parseInt(process.env.DB_PORT || ""),
+  username: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST, // or your database server
+  dialect: "postgres", // Specify PostgreSQL
+  models: [User],
+  logging: false, // Disable logging (optional)
+  pool: {
+    max: 10, // Maximum number of connections in the pool
+    min: 0, // Minimum number of connections in the pool
+    acquire: 30000, // Maximum time (ms) Sequelize tries to get a connection before throwing an error
+    idle: 10000, // Time (ms) a connection can be idle before being released
+  },
+});
+
+export default sequelize;

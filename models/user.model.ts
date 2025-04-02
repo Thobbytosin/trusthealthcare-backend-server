@@ -1,55 +1,133 @@
-import mongoose, { Document, Schema, Model } from "mongoose";
+import { Column, DataType, Default, Model, Table } from "sequelize-typescript";
 
-export interface IUser extends Document {
-  name: string;
-  email: string;
-  password?: string;
+@Table({
+  tableName: "users",
+  defaultScope: {
+    attributes: {
+      exclude: ["password"], // Always exclude by default
+    },
+  },
+  scopes: {
+    withPassword: {
+      attributes: { include: ["password"] },
+    },
+  },
+  timestamps: true, // createdAt and updatedAt
+})
+export class User extends Model {
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  name!: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      isEmail: true,
+    },
+  })
+  email!: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  password!: string;
+
+  @Column({
+    type: DataType.JSONB,
+  })
   avatar?: {
     id: string;
     url: string;
   };
-  role: ("user" | "patient" | "doctor" | "administrator")[];
-  verified: boolean;
-  lastLogin: Date;
-  lastPasswordReset: Date;
+
+  @Default(["user"])
+  @Column({
+    type: DataType.ARRAY(DataType.STRING),
+    allowNull: false,
+    validate: {
+      isIn: [["user", "patient", "doctor", "administrator"]],
+    },
+  })
+  role!: "user" | "patient" | "doctor" | "administrator";
+
+  @Default(false)
+  @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+  })
+  verified!: boolean;
+
+  @Default(DataType.NOW)
+  @Column({
+    type: DataType.DATE,
+    allowNull: false,
+  })
+  lastLogin!: Date;
+
+  @Column({
+    type: DataType.DATE,
+  })
+  lastPasswordReset?: Date;
 }
 
-const userSchema: Schema<IUser> = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    password: {
-      type: String,
-      required: true,
-      select: false,
-    },
-    verified: {
-      type: Boolean,
-      default: false,
-    },
-    lastLogin: {
-      type: Date,
-      default: Date.now(),
-    },
-    lastPasswordReset: {
-      type: Date,
-    },
-    role: {
-      type: [String],
-      enum: ["user", "patient", "doctor", "administrator"],
-      default: ["user"],
-    },
-  },
-  { timestamps: true }
-);
+//////// MONGO DB
+// import mongoose, { Document, Schema, Model } from "mongoose";
 
-const User: Model<IUser> = mongoose.model("User", userSchema);
+// export interface IUser extends Document {
+//   name: string;
+//   email: string;
+//   password?: string;
+//   avatar?: {
+//     id: string;
+//     url: string;
+//   };
+//   role: ("user" | "patient" | "doctor" | "administrator")[];
+//   verified: boolean;
+//   lastLogin: Date;
+//   lastPasswordReset: Date;
+// }
 
-export default User;
+// const userSchema: Schema<IUser> = new mongoose.Schema(
+//   {
+//     name: {
+//       type: String,
+//       required: true,
+//     },
+//     email: {
+//       type: String,
+//       required: true,
+//       unique: true,
+//     },
+//     password: {
+//       type: String,
+//       required: true,
+//       select: false,
+//     },
+//     verified: {
+//       type: Boolean,
+//       default: false,
+//     },
+//     lastLogin: {
+//       type: Date,
+//       default: Date.now(),
+//     },
+//     lastPasswordReset: {
+//       type: Date,
+//     },
+//     role: {
+//       type: [String],
+//       enum: ["user", "patient", "doctor", "administrator"],
+//       default: ["user"],
+//     },
+//   },
+//   { timestamps: true }
+// );
+
+// const User: Model<IUser> = mongoose.model("User", userSchema);
+
+// export default User;
