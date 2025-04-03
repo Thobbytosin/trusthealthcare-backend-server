@@ -15,6 +15,14 @@ import { Column, DataType, Default, Model, Table } from "sequelize-typescript";
   timestamps: true, // createdAt and updatedAt
 })
 export class User extends Model {
+  @Default(DataType.UUIDV4)
+  @Column({
+    type: DataType.UUID,
+    primaryKey: true,
+    allowNull: false,
+  })
+  id!: string;
+
   @Column({
     type: DataType.STRING,
     allowNull: false,
