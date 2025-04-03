@@ -1,67 +1,83 @@
-import mongoose, { Document, Model, Schema } from "mongoose";
+import { Column, DataType, Default, Model, Table } from "sequelize-typescript";
 
-interface IPatient extends Document {
-  user: mongoose.Schema.Types.ObjectId; // Link to the User schema (assuming patient is a user too)
-  name: string;
-  dateOfBirth: Date;
-  gender: "Male" | "Female";
-  contactInfo: {
-    phone: string;
-    email: string;
-  };
-  medicalHistory: string[];
-  allergies: string[];
-  medications: string[];
-  appointments: mongoose.Schema.Types.ObjectId[]; // Reference to appointments
-  emergencyContact: {
-    name: string;
-    relation: string;
-    phone: string;
-  }[];
-  preferredDoctor?: mongoose.Schema.Types.ObjectId; // Link to preferred doctor if any
+@Table({
+  tableName: "patients",
+  timestamps: true,
+})
+export class Patient extends Model {
+  @Default(DataType.UUIDV4)
+  @Column({
+    type: DataType.UUID,
+    primaryKey: true,
+    allowNull: false,
+  })
+  id!: string;
 }
 
-const patientSchema: Schema<IPatient> = new mongoose.Schema(
-  {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    name: { type: String, required: true },
-    dateOfBirth: { type: Date, required: true },
-    gender: { type: String, enum: ["Male", "Female"], required: true },
-    contactInfo: {
-      phone: { type: String, required: true },
-      email: { type: String, required: true },
-    },
-    medicalHistory: [{ type: String }],
-    allergies: [{ type: String }],
-    medications: [{ type: String }],
-    appointments: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Appointment" },
-    ],
-    emergencyContact: [
-      {
-        name: {
-          type: String,
-          required: true,
-        },
-        relation: {
-          type: String,
-          required: true,
-        },
-        phone: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
+// import mongoose, { Document, Model, Schema } from "mongoose";
 
-    preferredDoctor: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Doctor",
-    },
-  },
-  { timestamps: true }
-);
+// interface IPatient extends Document {
+//   user: mongoose.Schema.Types.ObjectId; // Link to the User schema (assuming patient is a user too)
+//   name: string;
+//   dateOfBirth: Date;
+//   gender: "Male" | "Female";
+//   contactInfo: {
+//     phone: string;
+//     email: string;
+//   };
+//   medicalHistory: string[];
+//   allergies: string[];
+//   medications: string[];
+//   appointments: mongoose.Schema.Types.ObjectId[]; // Reference to appointments
+//   emergencyContact: {
+//     name: string;
+//     relation: string;
+//     phone: string;
+//   }[];
+//   preferredDoctor?: mongoose.Schema.Types.ObjectId; // Link to preferred doctor if any
+// }
 
-const Patient: Model<IPatient> = mongoose.model("Patient", patientSchema);
+// const patientSchema: Schema<IPatient> = new mongoose.Schema(
+//   {
+//     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+//     name: { type: String, required: true },
+//     dateOfBirth: { type: Date, required: true },
+//     gender: { type: String, enum: ["Male", "Female"], required: true },
+//     contactInfo: {
+//       phone: { type: String, required: true },
+//       email: { type: String, required: true },
+//     },
+//     medicalHistory: [{ type: String }],
+//     allergies: [{ type: String }],
+//     medications: [{ type: String }],
+//     appointments: [
+//       { type: mongoose.Schema.Types.ObjectId, ref: "Appointment" },
+//     ],
+//     emergencyContact: [
+//       {
+//         name: {
+//           type: String,
+//           required: true,
+//         },
+//         relation: {
+//           type: String,
+//           required: true,
+//         },
+//         phone: {
+//           type: String,
+//           required: true,
+//         },
+//       },
+//     ],
 
-export default Patient;
+//     preferredDoctor: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "Doctor",
+//     },
+//   },
+//   { timestamps: true }
+// );
+
+// const Patient: Model<IPatient> = mongoose.model("Patient", patientSchema);
+
+// export default Patient;
