@@ -1,84 +1,86 @@
-// import { NextFunction, Request, Response } from "express";
-// import catchAsyncError from "../middlewares/catchAsyncError";
-// import ErrorHandler from "../utils/errorHandler";
-// import Doctor, { IDoctor } from "../models/doctor.model";
-// import cloudUploader from "../utils/cloudinary";
-// import { isPasswordStrong } from "../utils/helpers";
-// import bcryptjs from "bcryptjs";
-// import { User } from "../models/user.model";
+import { NextFunction, Request, Response } from "express";
+import catchAsyncError from "../middlewares/catchAsyncError";
+import ErrorHandler from "../utils/errorHandler";
+import cloudUploader from "../utils/cloudinary";
+import { isPasswordStrong } from "../utils/helpers";
+import bcryptjs from "bcryptjs";
+import { User } from "../models/user.model";
+import { Doctor } from "../models/doctor.model";
 
-// //////////////////////////////////////////////////////////////////////////////////////////////// UPLOAD DOCTOR
-// export const uploadDoctor = catchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const data = req.data;
+//////////////////////////////////////////////////////////////////////////////////////////////// UPLOAD DOCTOR
+export const uploadDoctor = catchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const data = req.data;
 
-//     const userId = req.user.id;
+    const userId = req.user.id;
 
-//     const user = await User.findByPk(userId);
+    const user = await User.findByPk(userId);
 
-//     // double check again if user exists
-//     if (!user) return next(new ErrorHandler("Authorization Restricted", 400));
+    // double check again if user exists
+    if (!user) return next(new ErrorHandler("Authorization Restricted", 400));
 
-//     const checkDoctor = await Doctor.findOne({ where:{name: data.name} });
+    const checkDoctor = await Doctor.findOne({ where: { name: data.name } });
 
-//     const checkDoctorEmail = await Doctor.findOne({ where:{email: data.email} });
+    const checkDoctorEmail = await Doctor.findOne({
+      where: { email: data.email },
+    });
 
-//     // check if doctor exists
-//     if (checkDoctor || checkDoctorEmail)
-//       return next(
-//         new ErrorHandler("Permission denied: Doctor already exists", 422)
-//       );
+    // check if doctor exists
+    if (checkDoctor || checkDoctorEmail)
+      return next(
+        new ErrorHandler("Permission denied: Doctor already exists", 422)
+      );
 
-//     // handle doctor image upload to server
-//     const thumbnail = data.thumbnail;
+    // handle doctor image upload to server
+    const thumbnail = data.thumbnail;
 
-//     if (!thumbnail)
-//       return next(
-//         new ErrorHandler("Permission Denied: Doctor MUST have an image", 403)
-//       );
+    if (!thumbnail)
+      return next(
+        new ErrorHandler("Permission Denied: Doctor MUST have an image", 403)
+      );
 
-//     if (thumbnail) {
-//       // upload the thumbnail
-//       // create the folder path the image will be uploaded on cloudinary
-//       const folderPath = `medicalFunc/doctors/${data.name}`;
+    if (thumbnail) {
+      // upload the thumbnail
+      // create the folder path the image will be uploaded on cloudinary
+      const folderPath = `medicalFunc/doctors/${data.name}`;
 
-//       // the cloudUploader takes 3 arguments (the foldl)
-//       await cloudUploader.upload(
-//         thumbnail as any,
-//         {
-//           folder: folderPath,
-//           transformation: { gravity: "face" },
-//         },
-//         async (error: any, result) => {
-//           // if there is an error, the code stops here
-//           if (error) return next(new ErrorHandler(error.message, 400));
+      // the cloudUploader takes 3 arguments (the foldl)
+      await cloudUploader.upload(
+        thumbnail as any,
+        {
+          folder: folderPath,
+          transformation: { gravity: "face" },
+        },
+        async (error: any, result) => {
+          // if there is an error, the code stops here
+          if (error) return next(new ErrorHandler(error.message, 400));
 
-//           const publicId = result?.public_id;
+          const publicId = result?.public_id;
 
-//           const thumbnailId = publicId?.split("/").pop() as string; // fetch the last id
+          const thumbnailId = publicId?.split("/").pop() as string; // fetch the last id
 
-//           const thumbnailUrl = result?.secure_url as string;
+          const thumbnailUrl = result?.secure_url as string;
 
-//           data.thumbnail = {
-//             id: thumbnailId,
-//             url: thumbnailUrl,
-//           };
-//         }
-//       );
-//     }
+          data.thumbnail = {
+            id: thumbnailId,
+            url: thumbnailUrl,
+          };
+        }
+      );
+    }
 
-//     // create doctor
-//     const doctor = await Doctor.create(data);
+    // create doctor
+    const doctor = await Doctor.create(data);
 
-//     res.status(201).json({
-//       success: true,
-//       message: "Application successful. Review in progress",
-//       doctor,
-//     });
-//   }
-// );
+    res.status(201).json({
+      success: true,
+      message: "Application successful. Review in progress",
+      doctor,
+    });
+  }
+);
 
-// //////////////////////////////////////////////////////////////////////////////////////////////// EDIT DOCTOR
+//////////////////////////////////////////////////////////////////////////////////////////////// EDIT DOCTOR
 // export const editDoctor = catchAsyncError(
 //   async (req: Request, res: Response, next: NextFunction) => {
 //     const doctorId = req.params.doctor_id;
