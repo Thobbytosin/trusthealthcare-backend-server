@@ -8,6 +8,34 @@ import {
 } from "sequelize-typescript";
 import { Appointment } from "./appointment.model";
 
+export interface IDoctor extends Document {
+  name: string;
+  email: string;
+  securityAnswer: string;
+  specialization: string;
+  experience: string;
+  education: string[];
+  hospital: string;
+  licenseNumber: string;
+  certifications: string[];
+  availableDays: string[];
+  timeSlots: { [key: string]: string[] };
+  holidays?: Date[];
+  clinicAddress: string;
+  city: string;
+  state: string;
+  zipCode: number;
+  phone: string;
+  altPhone?: string;
+  ratings?: number;
+  reviews?: Review[];
+  appointments?: Appointment[];
+  maxPatientsPerDay: number;
+  about: string;
+  thumbnail: { id: string; url: string };
+  verificationStatus: "Processing" | "Verified" | "Failed" | "Completed";
+}
+
 interface Review {
   patientId: number;
   comment: string;
@@ -138,10 +166,10 @@ export class Doctor extends Model {
   zipCode!: number;
 
   @Column({
-    type: DataType.BIGINT,
+    type: DataType.STRING,
     allowNull: false,
   })
-  phone!: number;
+  phone!: string;
 
   @Column({
     type: DataType.STRING,
@@ -152,7 +180,7 @@ export class Doctor extends Model {
     type: DataType.FLOAT,
     defaultValue: 0,
   })
-  ratings!: number;
+  ratings?: number;
 
   @Column({
     type: DataType.ARRAY(DataType.JSONB),
@@ -160,7 +188,7 @@ export class Doctor extends Model {
   reviews?: Review[];
 
   @HasMany(() => Appointment)
-  appointments!: Appointment[];
+  appointments?: Appointment[];
 
   @Column({
     type: DataType.INTEGER,
@@ -191,39 +219,6 @@ export class Doctor extends Model {
 }
 
 // import mongoose, { Document, Model, Schema } from "mongoose";
-
-// export interface IDoctor extends Document {
-//   name: string;
-//   email: string;
-//   securityAnswer: string;
-//   specialization: string;
-//   experience: string;
-//   education: string[];
-//   hospital: string;
-//   licenseNumber: string;
-//   certifications?: string[];
-//   availableDays: string[];
-//   timeSlots: { [key: string]: string[] };
-//   holidays?: Date[];
-//   clinicAddress: string;
-//   city: string;
-//   state: string;
-//   zipCode: number;
-//   phone: number;
-//   altPhone?: string;
-//   ratings: number;
-//   reviews?: {
-//     patientId: mongoose.Schema.Types.ObjectId;
-//     comment: string;
-//     rating: number;
-//     date: Date;
-//   }[];
-//   appointments?: mongoose.Schema.Types.ObjectId[];
-//   maxPatientsPerDay: number;
-//   about?: string;
-//   thumbnail: { id: string; url: string };
-//   verificationStatus: "Processing" | "Verified" | "Failed" | "Completed";
-// }
 
 // const doctorSchema: Schema<IDoctor> = new mongoose.Schema(
 //   {

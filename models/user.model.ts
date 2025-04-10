@@ -58,10 +58,10 @@ export class User extends Model {
     type: DataType.ARRAY(DataType.STRING),
     allowNull: false,
     validate: {
-      isIn: [["user", "patient", "doctor", "administrator"]],
+      isIn: [["user", "patient", "doctor", "admin"]],
     },
   })
-  role!: "user" | "patient" | "doctor" | "administrator";
+  role!: "user" | "patient" | "doctor" | "admin";
 
   @Default(false)
   @Column({

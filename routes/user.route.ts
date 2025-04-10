@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   accountVerification,
+  deleteUser,
   forgotPassword,
   getUserData,
   loginUser,
@@ -13,7 +14,8 @@ import {
   hasPasswordChangedLast24Hours,
   isUserAuthenticated,
 } from "../middlewares/authentication";
-import { updateAccessToken } from "../middlewares/updateToken";
+import { updateToken } from "../middlewares/updateToken";
+import { authorizeRoleAdmin } from "../middlewares/admin-auth";
 
 const userRouter = Router();
 
@@ -27,7 +29,14 @@ userRouter.post(
   forgotPassword
 );
 userRouter.post("/reset-password", resetPassword);
-userRouter.post("/signout", isUserAuthenticated, updateAccessToken, signOut);
-userRouter.get("/me", isUserAuthenticated, updateAccessToken, getUserData);
+userRouter.post("/signout", isUserAuthenticated, updateToken, signOut);
+userRouter.get("/me", isUserAuthenticated, updateToken, getUserData);
+userRouter.delete(
+  "/delete-user/:userId",
+  isUserAuthenticated,
+  updateToken,
+  authorizeRoleAdmin("admin"),
+  deleteUser
+);
 
 export default userRouter;

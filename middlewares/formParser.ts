@@ -8,12 +8,21 @@ export const formParser = async (
 ) => {
   const form = formidable();
 
+  const arrayFields = ["availableDays"];
+
   const [fields, files] = await form.parse(req as any);
 
   if (!req.body) req.body = {};
 
   for (let key in fields) {
-    req.body[key] = fields[key]![0];
+    const value = fields[key];
+    if (!value) continue;
+
+    if (arrayFields.includes(key)) {
+      req.body[key] = value;
+    } else {
+      req.body[key] = value![0];
+    }
   }
 
   if (!req.files) req.files = {};
@@ -30,5 +39,5 @@ export const formParser = async (
     }
   }
 
-  next(); // got to next controller
+  next(); // move to validate input data
 };

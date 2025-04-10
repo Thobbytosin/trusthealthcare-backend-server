@@ -1,80 +1,54 @@
 import { NextFunction, Request, Response } from "express";
 import catchAsyncError from "../middlewares/catchAsyncError";
 import ErrorHandler from "../utils/errorHandler";
-import cloudUploader from "../utils/cloudinary";
-import { isPasswordStrong } from "../utils/helpers";
-import bcryptjs from "bcryptjs";
-import { User } from "../models/user.model";
+import { uploadToCloudinary } from "../utils/cloudinary";
 import { Doctor } from "../models/doctor.model";
 
 //////////////////////////////////////////////////////////////////////////////////////////////// UPLOAD DOCTOR
 export const uploadDoctor = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const data = req.data;
+    const data = req.body;
 
-    const userId = req.user.id;
+    const loggedInUser = req.user;
 
-    const user = await User.findByPk(userId);
+    // check if loggedIn user is using their verified email
+    if (loggedInUser.email !== data.email)
+      return next(
+        new ErrorHandler("Invalid Credentials: Enter your verified email", 403)
+      );
 
-    // double check again if user exists
-    if (!user) return next(new ErrorHandler("Authorization Restricted", 400));
+    const { thumbnail } = req.files;
 
-    const checkDoctor = await Doctor.findOne({ where: { name: data.name } });
-
-    const checkDoctorEmail = await Doctor.findOne({
-      where: { email: data.email },
-    });
+    const checkDoctor = await Doctor.findOne({ where: { email: data.email } });
 
     // check if doctor exists
-    if (checkDoctor || checkDoctorEmail)
+    if (checkDoctor)
       return next(
         new ErrorHandler("Permission denied: Doctor already exists", 422)
       );
 
-    // handle doctor image upload to server
-    const thumbnail = data.thumbnail;
+    const folderPath = `trusthealthcare/doctors/${data.name}`;
 
-    if (!thumbnail)
-      return next(
-        new ErrorHandler("Permission Denied: Doctor MUST have an image", 403)
-      );
+    const { thumbnailId, thumbnailUrl } = await uploadToCloudinary(
+      res,
+      thumbnail,
+      folderPath
+    );
 
-    if (thumbnail) {
-      // upload the thumbnail
-      // create the folder path the image will be uploaded on cloudinary
-      const folderPath = `medicalFunc/doctors/${data.name}`;
+    // console.log(thumbnailId, thumbnailUrl);
 
-      // the cloudUploader takes 3 arguments (the foldl)
-      await cloudUploader.upload(
-        thumbnail as any,
-        {
-          folder: folderPath,
-          transformation: { gravity: "face" },
-        },
-        async (error: any, result) => {
-          // if there is an error, the code stops here
-          if (error) return next(new ErrorHandler(error.message, 400));
-
-          const publicId = result?.public_id;
-
-          const thumbnailId = publicId?.split("/").pop() as string; // fetch the last id
-
-          const thumbnailUrl = result?.secure_url as string;
-
-          data.thumbnail = {
-            id: thumbnailId,
-            url: thumbnailUrl,
-          };
-        }
-      );
-    }
+    data.thumbnail = {
+      id: thumbnailId,
+      url: thumbnailUrl,
+    };
 
     // create doctor
     const doctor = await Doctor.create(data);
 
     res.status(201).json({
       success: true,
-      message: "Application successful. Review in progress",
+      message:
+        "Application submitted. Please be patient while we review your application.",
       doctor,
     });
   }

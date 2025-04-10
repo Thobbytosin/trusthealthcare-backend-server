@@ -35,11 +35,14 @@ export const hasPasswordChangedLast24Hours = catchAsyncError(
     const { email } = req.body;
 
     const user = await User.findOne({ where: { email } });
+    // console.log(user?.dataValues);
 
     // check if user exists
-    if (!user) return next(new ErrorHandler("Account not found", 404));
+    if (!user) return next(new ErrorHandler("Account does not exist", 404));
 
+    // for first time
     if (user.lastPasswordReset === null) {
+      req.user = user?.dataValues;
       return next();
     }
 
@@ -52,6 +55,7 @@ export const hasPasswordChangedLast24Hours = catchAsyncError(
     const twentFourHours = 24 * 60 * 60 * 1000; // milliseconds
 
     if (timeDifference > twentFourHours) {
+      req.user = user?.dataValues;
       return next();
     } else {
       return next(

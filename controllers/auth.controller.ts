@@ -17,8 +17,6 @@ import {
   signInWithCredentials,
   verificationTokenOptions,
 } from "../utils/token";
-import { sendVerificationSMS } from "../utils/sendSms";
-import { where } from "sequelize";
 
 dotenv.config();
 
@@ -221,7 +219,7 @@ export const loginUser = catchAsyncError(
       return next(new ErrorHandler("All fields are required", 403));
 
     // check if user exists
-    const user = await User.scope("withPassword").findOne({ where: { email } });
+    const user = await User.scope("withPassword").findOne({ where: { email } }); // include password
 
     if (!user) return next(new ErrorHandler("Account not found", 404));
 
@@ -252,10 +250,8 @@ export const forgotPassword = catchAsyncError(
 
     if (!email) return next(new ErrorHandler("Field is required", 403));
 
-    // check if user is already registered
-    const user = await User.findOne({ where: { email } });
-
-    if (!user) return next(new ErrorHandler("Account not found", 404));
+    // from the hasPasswordChanged middleware
+    const user = req.user;
 
     // generate the reset token and code
     const { resetCode, resetToken } = createResetPasswordToken(user);
@@ -370,5 +366,30 @@ export const getUserData = catchAsyncError(
     if (!user) return next(new ErrorHandler("Account not found", 404));
 
     res.status(200).json({ success: true, user });
+  }
+);
+
+export const deleteUser = catchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+    const loggedInUser = req.user;
+
+    if (!userId) return next(new ErrorHandler("User Id not found", 400));
+
+    const user = await User.findByPk(userId);
+
+    if (!user) return next(new ErrorHandler("User Account not found", 404));
+
+    if (loggedInUser.id === userId)
+      return next(
+        new ErrorHandler(
+          "Permission Restricted: You can not delete your account",
+          403
+        )
+      );
+
+    await user.destroy();
+
+    res.status(200).json({ success: true, message: "User Account Deleted" });
   }
 );
