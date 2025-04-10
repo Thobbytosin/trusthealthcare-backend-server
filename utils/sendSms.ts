@@ -7,7 +7,7 @@ export const sendVerificationSMS = async (to: string, code: string) => {
   const data = {
     to,
     from: "medicfunc",
-    sms: `Welcome to Medical Func: This is your verification code ${code}`,
+    sms: `Welcome to Trust HealthCare: Your account verification code is ${code}`,
     api_key: process.env.TERMII_API_KEY,
     channel: "generic",
     type: "plain",
@@ -24,7 +24,7 @@ export const sendVerificationSMS = async (to: string, code: string) => {
 
   try {
     const response = await axios(options);
-    console.log("SUCCESS SENDING VERIFICATION SMS:", response.data); // Logs the response from Termii
+    // console.log("SUCCESS SENDING VERIFICATION SMS:", response.data); // Logs the response from Termii
   } catch (error: any) {
     console.error(
       "Error sending SMS:",

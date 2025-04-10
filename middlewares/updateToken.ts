@@ -7,7 +7,7 @@ import ErrorHandler from "../utils/errorHandler";
 
 dotenv.config();
 
-export const updateAccessToken = catchAsyncError(
+export const updateToken = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     // fetch the refrsh token from the request cookies
     const { refresh_token } = req.cookies;
@@ -52,6 +52,7 @@ export const updateAccessToken = catchAsyncError(
     res.cookie("access_token", accessToken, accessTokenOptions);
     res.cookie("refresh_token", refreshToken, refreshTokenOptions);
 
+    req.user = user;
     next();
   }
 );

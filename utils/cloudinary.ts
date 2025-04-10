@@ -14,8 +14,31 @@ cloudinary.config({
   secure: true,
 });
 
-const cloudUploader = cloudinary.uploader;
+export const cloudUploader = cloudinary.uploader;
 
 export const cloudApi = cloudinary.api;
 
-export default cloudUploader;
+interface UploadResult {
+  thumbnailId: string;
+  thumbnailUrl: string;
+}
+
+export const uploadToCloudinary = async (
+  thumbnail: any,
+  folderPath: string
+): Promise<UploadResult> => {
+  const result = await cloudUploader.upload(thumbnail.filepath, {
+    folder: folderPath,
+    use_filename: true,
+    unique_filename: false,
+    transformation: { gravity: "face" },
+  });
+
+  const publicId = result?.public_id;
+
+  const thumbnailId = publicId?.split("/").pop() as string; // fetch the last id
+
+  const thumbnailUrl = result?.secure_url as string;
+
+  return { thumbnailId, thumbnailUrl };
+};

@@ -1,9 +1,9 @@
 import { createTestApp } from "../../app-test";
-import User from "../../models/user.model";
 import connectToDB from "../../utils/db";
 import disconnectDB from "../../utils/disconnectDb";
 import request from "supertest";
 import bcryptjs from "bcryptjs";
+import { User } from "../../models/user.model";
 
 jest.mock("../../models/user.model.ts");
 
