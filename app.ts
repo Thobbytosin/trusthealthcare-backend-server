@@ -6,6 +6,7 @@ import { rateLimit } from "express-rate-limit";
 import ErrorMiddleware from "./middlewares/error";
 import userRouter from "./routes/user.route";
 import doctorRouter from "./routes/doctor.route";
+import { cloudApi, cloudUploader } from "./utils/cloudinary";
 
 export const app = express();
 
@@ -43,8 +44,10 @@ app.use("/api/v1/", userRouter);
 app.use("/api/v1/", doctorRouter);
 
 // test api
-app.get("/test", (req, res) => {
+app.get("/test", async (req, res) => {
   res.send({ message: "API IS WORKING" });
+
+  // await cloudApi.delete_resources_by_prefix("trusthealthcare/doctors/Johnson");
 });
 
 // unknown route

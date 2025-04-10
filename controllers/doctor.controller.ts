@@ -8,16 +8,18 @@ import { Doctor } from "../models/doctor.model";
 export const uploadDoctor = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const data = req.body;
-
     const loggedInUser = req.user;
+    const { thumbnail } = req.files;
 
-    // check if loggedIn user is using their verified email
-    if (loggedInUser.email !== data.email)
+    // if loggedIn user is not an admin, they must provide their verified email
+    if (
+      !loggedInUser.role.some((role: string) => ["admin"].includes(role)) &&
+      loggedInUser.email !== data.email
+    ) {
       return next(
         new ErrorHandler("Invalid Credentials: Enter your verified email", 403)
       );
-
-    const { thumbnail } = req.files;
+    }
 
     const checkDoctor = await Doctor.findOne({ where: { email: data.email } });
 
@@ -29,18 +31,22 @@ export const uploadDoctor = catchAsyncError(
 
     const folderPath = `trusthealthcare/doctors/${data.name}`;
 
-    const { thumbnailId, thumbnailUrl } = await uploadToCloudinary(
-      res,
-      thumbnail,
-      folderPath
-    );
+    // for cloudinary upload
+    try {
+      const { thumbnailId, thumbnailUrl } = await uploadToCloudinary(
+        thumbnail,
+        folderPath
+      );
 
-    // console.log(thumbnailId, thumbnailUrl);
-
-    data.thumbnail = {
-      id: thumbnailId,
-      url: thumbnailUrl,
-    };
+      data.thumbnail = {
+        id: thumbnailId,
+        url: thumbnailUrl,
+      };
+    } catch (error: any) {
+      return res
+        .status(400)
+        .json({ success: false, message: error.message || "Upload Failed" });
+    }
 
     // create doctor
     const doctor = await Doctor.create(data);

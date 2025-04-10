@@ -1,7 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";
-import ErrorHandler from "./errorHandler";
-import { Response } from "express";
 
 dotenv.config();
 
@@ -16,46 +14,31 @@ cloudinary.config({
   secure: true,
 });
 
-const cloudUploader = cloudinary.uploader;
-
-export const uploadToCloudinary = async (
-  res: Response,
-  thumbnail: any,
-  folderPath: string
-) => {
-  let thumbnailId;
-  let thumbnailUrl;
-
-  await cloudUploader.upload(
-    thumbnail.filepath,
-    {
-      folder: folderPath,
-      transformation: { gravity: "face" },
-    },
-    async (error: any, result) => {
-      // if there is an error, the code stops here
-
-      if (error)
-        return res.status(400).json({ success: false, message: error.message });
-
-      const publicId = result?.public_id;
-
-      thumbnailId = publicId?.split("/").pop() as string; // fetch the last id
-
-      thumbnailUrl = result?.secure_url as string;
-
-      // console.log(thumbnailId, thumbnailUrl);
-
-      // data.thumbnail = {
-      //   id: thumbnailId,
-      //   url: thumbnailUrl,
-      // };
-    }
-  );
-
-  return { thumbnailId, thumbnailUrl };
-};
+export const cloudUploader = cloudinary.uploader;
 
 export const cloudApi = cloudinary.api;
 
-export default cloudUploader;
+interface UploadResult {
+  thumbnailId: string;
+  thumbnailUrl: string;
+}
+
+export const uploadToCloudinary = async (
+  thumbnail: any,
+  folderPath: string
+): Promise<UploadResult> => {
+  const result = await cloudUploader.upload(thumbnail.filepath, {
+    folder: folderPath,
+    use_filename: true,
+    unique_filename: false,
+    transformation: { gravity: "face" },
+  });
+
+  const publicId = result?.public_id;
+
+  const thumbnailId = publicId?.split("/").pop() as string; // fetch the last id
+
+  const thumbnailUrl = result?.secure_url as string;
+
+  return { thumbnailId, thumbnailUrl };
+};
