@@ -70,6 +70,7 @@ export const validateDoctorData = catchAsyncError(
 
     const formattedData = {
       ...data,
+      city: data.city.toLowerCase(),
       education: ensureArray(data.education),
       certifications: ensureArray(data.certifications),
       availableDays: ensureArray(data.availableDays),

@@ -3,6 +3,7 @@ import catchAsyncError from "../middlewares/catchAsyncError";
 import ErrorHandler from "../utils/errorHandler";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import { Doctor } from "../models/doctor.model";
+import { Op } from "sequelize";
 
 //////////////////////////////////////////////////////////////////////////////////////////////// UPLOAD DOCTOR
 export const uploadDoctor = catchAsyncError(
@@ -200,30 +201,87 @@ export const uploadDoctor = catchAsyncError(
 // );
 
 // //////////////////////////////////////////////////////////////////////////////////////////////// GET ALL DOCTORS (USER)
-// export const getAllDoctorsList = catchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     // const page = parseInt(req.query.page as string, 10) || 1;
-//     // const limit = parseInt(req.query.limit as string, 10) || 4;
-//     // const skip = (page - 1) * limit;
+export const getAllDoctorsList = catchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 4;
+    const skip = (page - 1) * limit;
+    const sortOrder = (req.query.sortOrder as string) || "asc";
 
-//     // const totalDoctors = await Doctor.countDocuments();
+    // search query
+    const search = req.query.search as string;
 
-//     const doctors = await Doctor.find().select(
-//       "-securityAnswer -phone -altPhone -hospital "
-//     );
-//     // .skip(skip)
-//     // .limit(limit);   // hide for now
+    const { sortBy, available } = req.query;
 
-//     if (!doctors) return next(new ErrorHandler("Error Fetching DoctorsS", 400));
+    // set WHERE conditions for search query
+    const where: any = {};
+    if (search) {
+      const searchTerms = search.trim().split(/\s+/); // Split by spaces
 
-//     res.status(200).json({
-//       success: true,
-//       message: "Doctors Information retrieved",
-//       doctors,
-//       // totalPages: Math.ceil(totalDoctors / limit),
-//     });
-//   }
-// );
+      where[Op.or] = searchTerms.map((term) => ({
+        [Op.or]: [
+          { city: { [Op.iRegexp]: `\\m${term}\\M` } }, // no case sensitive
+          { specialization: { [Op.iRegexp]: `\\m${term}\\M` } },
+        ],
+      }));
+    }
+
+    if (available) {
+      where.available = true; // fetch doctors that available
+    }
+
+    // set ORDER conditions for sorting
+    let order: any[] = [];
+
+    if (sortBy === "latest") {
+      order.push(["createdAt", "DESC"]);
+    } else if (sortBy === "oldest") {
+      order.push(["createdAt", "ASC"]);
+    } else if (sortBy === "ratings") {
+      order.push(["ratings", "DESC"]);
+    }
+
+    // const totalDoctors = await Doctor.count();
+
+    const totalDoctors = await Doctor.count({ where });
+
+    const doctors = await Doctor.findAll({
+      where,
+      attributes: {
+        exclude: [
+          "securityAnswer",
+          "phone",
+          "altPhone",
+          "hospital",
+          "email",
+          "education",
+          "licenseNumber",
+          "certifications",
+          "availableDays",
+          "timeSlots",
+          "holidays",
+          "clinicAddress",
+          "reviews",
+          "maxPatientsPerDay",
+        ],
+      },
+      offset: skip,
+      limit,
+      order,
+    });
+
+    if (!doctors) return next(new ErrorHandler("No record found", 404));
+
+    res.status(200).json({
+      success: true,
+      message: "Doctors list sent",
+      resultsPerPage: doctors.length,
+      totalPages: Math.ceil(totalDoctors / limit),
+      page,
+      doctors,
+    });
+  }
+);
 
 // //////////////////////////////////////////////////////////////////////////////////////////////// GET ALL DOCTORS (USER)
 // export const getAllDoctorsAdmin = catchAsyncError(

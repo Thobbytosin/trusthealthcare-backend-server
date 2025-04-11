@@ -4,6 +4,7 @@ import ErrorHandler from "../utils/errorHandler";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { User } from "../models/user.model";
+import { accessTokenOptions, refreshTokenOptions } from "../utils/token";
 
 dotenv.config();
 
@@ -11,6 +12,7 @@ export const isUserAuthenticated = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     // check if user is logged in (check and verify access token)
     const { access_token } = req.cookies;
+    // console.log(req);
 
     // if there is no access token
     if (!access_token)

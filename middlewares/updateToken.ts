@@ -52,7 +52,6 @@ export const updateToken = catchAsyncError(
     res.cookie("access_token", accessToken, accessTokenOptions);
     res.cookie("refresh_token", refreshToken, refreshTokenOptions);
 
-    req.user = user;
     next();
   }
 );

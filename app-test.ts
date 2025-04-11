@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { registerUser } from "./controllers/auth.controller";
+import { registerUser } from "./controllers/user.controller";
 import ErrorMiddleware from "./middlewares/error";
 
 export const createTestApp = () => {
