@@ -212,6 +212,13 @@ export class Doctor extends Model {
   };
 
   @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  })
+  available!: boolean;
+
+  @Column({
     type: DataType.ENUM("Processing", "Verified", "Failed", "Completed"),
     defaultValue: "Processing",
   })

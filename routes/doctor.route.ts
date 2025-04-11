@@ -3,6 +3,7 @@ import { updateToken } from "../middlewares/updateToken";
 import { isUserAuthenticated } from "../middlewares/authentication";
 import { authorizeRoleAdmin, authorizeUpload } from "../middlewares/admin-auth";
 import {
+  getAllDoctorsList,
   // deleteDoctor,
   // editDoctor,
   // getAllDoctorsAdmin,
@@ -11,7 +12,7 @@ import {
   // getDoctorAdmin,
   uploadDoctor,
 } from "../controllers/doctor.controller";
-import { validateDoctorData } from "../middlewares/validateDoctor";
+import { validateDoctorData } from "../middlewares/validatedoctorData";
 import { formParser } from "../middlewares/formParser";
 
 const doctorRouter = Router();
@@ -19,7 +20,6 @@ const doctorRouter = Router();
 doctorRouter.post(
   "/upload-doctor",
   isUserAuthenticated,
-  updateToken,
   authorizeUpload("admin", "user"),
   formParser,
   validateDoctorData,
@@ -59,14 +59,14 @@ doctorRouter.post(
 //   getDoctorAdmin
 // );
 
-// doctorRouter.get("/get-doctors", getAllDoctorsList);
+doctorRouter.get("/get-all-doctors-free", getAllDoctorsList);
 
 // doctorRouter.get(
 //   "/get-doctors-list-admin",
 //   isUserAuthenticated,
-//   updateAccessToken,
-//   authorizeRoleAdmin("administrator"),
-//   getAllDoctorsAdmin
+//   updateToken,
+//   authorizeRoleAdmin("admin"),
+//   getAllDoctorsList
 // );
 
 export default doctorRouter;

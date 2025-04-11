@@ -7,6 +7,8 @@ import ErrorMiddleware from "./middlewares/error";
 import userRouter from "./routes/user.route";
 import doctorRouter from "./routes/doctor.route";
 import { cloudApi, cloudUploader } from "./utils/cloudinary";
+import authRouter from "./routes/auth.route";
+import adminRouter from "./routes/admin.route";
 
 export const app = express();
 
@@ -40,8 +42,10 @@ const limiter = rateLimit({
 });
 
 // ROUTES
+app.use("/api/v1/", authRouter);
 app.use("/api/v1/", userRouter);
 app.use("/api/v1/", doctorRouter);
+app.use("/api/v1/", adminRouter);
 
 // test api
 app.get("/test", async (req, res) => {
