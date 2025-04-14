@@ -11,12 +11,17 @@ import {
 
 const userRouter = Router();
 
+// FORGOT PASSWORD
 userRouter.post(
   "/forgot-password",
   hasPasswordChangedLast24Hours,
   forgotPassword
 );
+
+// RESET PASSWORD
 userRouter.post("/reset-password", resetPassword);
+
+// GET USER DETAILS
 userRouter.get("/me", isUserAuthenticated, getUserData);
 
 export default userRouter;

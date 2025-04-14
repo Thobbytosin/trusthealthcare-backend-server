@@ -8,7 +8,13 @@ export const formParser = async (
 ) => {
   const form = formidable();
 
-  const arrayFields = ["availableDays", "certifications", "education"];
+  const arrayFields = [
+    "availableDays",
+    "certifications",
+    "education",
+    "specialization",
+    "workExperience",
+  ];
 
   const [fields, files] = await form.parse(req as any);
 

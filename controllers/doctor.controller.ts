@@ -4,6 +4,8 @@ import ErrorHandler from "../utils/errorHandler";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import { Doctor } from "../models/doctor.model";
 import { Op } from "sequelize";
+import { User } from "../models/user.model";
+import { signOut } from "./auth.controller";
 
 //////////////////////////////////////////////////////////////////////////////////////////////// UPLOAD DOCTOR
 export const uploadDoctor = catchAsyncError(
@@ -11,6 +13,20 @@ export const uploadDoctor = catchAsyncError(
     const data = req.body;
     const loggedInUser = req.user;
     const { thumbnail } = req.files;
+
+    // find loggedIn user from the database
+    const user = await User.findByPk(loggedInUser.id);
+
+    // sign out for security reasons
+    if (!user) {
+      signOut;
+      return next(
+        new ErrorHandler(
+          "Permission denied: Suspected fraudulent operation",
+          404
+        )
+      );
+    }
 
     // if loggedIn user is not an admin, they must provide their verified email
     if (
@@ -49,156 +65,118 @@ export const uploadDoctor = catchAsyncError(
         .json({ success: false, message: error.message || "Upload Failed" });
     }
 
-    // create doctor
-    const doctor = await Doctor.create(data);
+    let doctor;
+    // create doctor (either by a user or an admin)
+    if (loggedInUser.role.some((role: string) => ["admin"].includes(role))) {
+      doctor = await Doctor.create({
+        ...data,
+        uploadedBy: "admin",
+        userId: loggedInUser.id,
+      });
+    } else {
+      doctor = await Doctor.create({
+        ...data,
+        uploadedBy: "user",
+        userId: loggedInUser.id,
+      });
+    }
+
+    if (!doctor)
+      return next(new ErrorHandler("Error uploading doctor details", 400));
 
     res.status(201).json({
       success: true,
       message:
         "Application submitted. Please be patient while we review your application.",
-      doctor,
     });
   }
 );
 
-//////////////////////////////////////////////////////////////////////////////////////////////// EDIT DOCTOR
-// export const editDoctor = catchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const doctorId = req.params.doctor_id;
+//////////////////////////////////////////////////////////////////////////////////////////////// UPDATE DOCTOR
+export const updateDoctor = catchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const data = req.body; // edited fields
+    const { thumbnail } = req.files; // images
+    const doctor = req.doctor;
 
-//     const findDoctor = await Doctor.findById(doctorId);
+    // upload data image to cloudinary server
 
-//     if (!findDoctor)
-//       return next(
-//         new ErrorHandler("Permission denied: Doctor credentials not found", 404)
-//       );
+    if (thumbnail) {
+      const folderPath = `trusthealthcare/doctors/${data.name}`;
 
-//     const data = req.data;
+      // for cloudinary upload
+      try {
+        const { thumbnailId, thumbnailUrl } = await uploadToCloudinary(
+          thumbnail,
+          folderPath
+        );
 
-//     const userId = req.user._id;
+        data.thumbnail = {
+          id: thumbnailId,
+          url: thumbnailUrl,
+        };
+      } catch (error: any) {
+        return res
+          .status(400)
+          .json({ success: false, message: error.message || "Upload Failed" });
+      }
+    }
 
-//     const user = await User.findById(userId);
+    // update doctor credentials
 
-//     // double check again if user exists
-//     if (!user) return next(new ErrorHandler("Authorization Restricted", 400));
+    const newDoctor = await Doctor.update(
+      { ...data },
+      { where: { id: doctor.id } }
+    );
 
-//     const checkDoctor = await Doctor.findOne({ email: data.email });
+    if (!newDoctor)
+      return next(new ErrorHandler("Error updating credntials", 400));
 
-//     if (!checkDoctor)
-//       return next(
-//         new ErrorHandler("Permission denied: Doctor credentials not found", 404)
-//       );
-
-//     // also check if doctor has been verified
-//     if (checkDoctor.verificationStatus === "Processing")
-//       return next(
-//         new ErrorHandler(
-//           "Account verification is in progress. Try again later. Thanks.",
-//           403
-//         )
-//       );
-
-//     // also check if doctor has been verified
-//     if (checkDoctor.verificationStatus === "Failed")
-//       return next(new ErrorHandler("Account Verification failed.", 400));
-
-//     // upload data image to cloudinary server
-//     const thumbnail = data.thumbnail;
-
-//     if (thumbnail) {
-//       // upload the thumbnail
-//       // create the folder path the image will be uploaded on cloudinary
-//       const folderPath = `medicalFunc/doctors/${data.name}`;
-
-//       // the cloudUploader takes 3 arguments (the foldl)
-//       await cloudUploader.upload(
-//         thumbnail as any,
-//         {
-//           folder: folderPath,
-//           transformation: { gravity: "face" },
-//         },
-//         async (error: any, result) => {
-//           // if there is an error, the code stops here
-//           if (error) return next(new ErrorHandler(error.message, 400));
-
-//           const publicId = result?.public_id;
-
-//           const thumbnailId = publicId?.split("/").pop() as string; // fetch the last id
-
-//           const thumbnailUrl = result?.secure_url as string;
-
-//           data.thumbnail = {
-//             id: thumbnailId,
-//             url: thumbnailUrl,
-//           };
-//         }
-//       );
-//     }
-
-//     // update doctor credentials
-
-//     const newDoctorInfo = await Doctor.findByIdAndUpdate(
-//       doctorId,
-//       { $set: data },
-//       { new: true }
-//     );
-
-//     res.status(201).json({
-//       success: true,
-//       message: "Doctor credentials updated.",
-//       doctor: newDoctorInfo,
-//     });
-//   }
-// );
-
-// //////////////////////////////////////////////////////////////////////////////////////////////// DELETE DOCTOR
-// export const deleteDoctor = catchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const doctorId = req.params.doctor_id;
-
-//     const doctor = await Doctor.findById(doctorId);
-
-//     if (!doctor) return next(new ErrorHandler("Error: Doctor not found", 404));
-
-//     await doctor?.deleteOne();
-
-//     res
-//       .status(200)
-//       .json({ success: true, message: "Doctor credentials deleted" });
-//   }
-// );
+    res.status(201).json({
+      success: true,
+      message: "Doctor credentials updated.",
+    });
+  }
+);
 
 // //////////////////////////////////////////////////////////////////////////////////////////////// GET A DOCTOR (USER)
-// export const getDoctor = catchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const doctorId = req.params.doctor_id;
+export const getDoctor = catchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const doctorId = req.params.doctor_id;
+    const { role } = req.query;
 
-//     const doctor = await Doctor.findById(doctorId).select(
-//       "-securityAnswer -phone -altPhone -hospital -clinicAddress"
-//     );
+    const doctor = await Doctor.findOne({
+      where: { id: doctorId },
+      attributes: {
+        exclude: [
+          "securityAnswer",
+          "phone",
+          "altPhone",
+          "hospital",
+          "email",
+          "education",
+          "licenseNumber",
+          "certifications",
+          "availableDays",
+          "timeSlots",
+          "holidays",
+          "clinicAddress",
+          "reviews",
+          "maxPatientsPerDay",
+          "appointments",
+          "uploadedBy",
+          "userId",
+        ],
+      },
+    });
 
-//     if (!doctor) return next(new ErrorHandler("Error: Doctor not found", 404));
+    if (!doctor) return next(new ErrorHandler("Error: Doctor not found", 404));
 
-//     res
-//       .status(200)
-//       .json({ success: true, message: "Doctor Information retrieved", doctor });
-//   }
-// );
-
-// //////////////////////////////////////////////////////////////////////////////////////////////// GET A DOCTOR (ADMIN)
-// export const getDoctorAdmin = catchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const doctorId = req.params.doctor_id;
-
-//     const doctor = await Doctor.findById(doctorId);
-
-//     if (!doctor) return next(new ErrorHandler("Error: Doctor not found", 404));
-
-//     res
-//       .status(200)
-//       .json({ success: true, message: "Doctor Information retrieved", doctor });
-//   }
-// );
+    res
+      .status(200)
+      .json({ success: true, message: "Doctor Information retrieved", doctor });
+  }
+);
 
 // //////////////////////////////////////////////////////////////////////////////////////////////// GET ALL DOCTORS (USER)
 export const getAllDoctorsList = catchAsyncError(
@@ -263,6 +241,9 @@ export const getAllDoctorsList = catchAsyncError(
           "clinicAddress",
           "reviews",
           "maxPatientsPerDay",
+          "appointments",
+          "uploadedBy",
+          "userId",
         ],
       },
       offset: skip,
@@ -283,17 +264,45 @@ export const getAllDoctorsList = catchAsyncError(
   }
 );
 
-// //////////////////////////////////////////////////////////////////////////////////////////////// GET ALL DOCTORS (USER)
-// export const getAllDoctorsAdmin = catchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const doctors = await Doctor.find();
+// //////////////////////////////////////////////////////////////////////////////////////////////// GET SOME DOCTORS (UNAUTHENTICATED)
+export const getSomeDoctorsUnauthenticated = catchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const doctors = await Doctor.findAll({
+      where: { available: true },
+      attributes: {
+        exclude: [
+          "securityAnswer",
+          "phone",
+          "altPhone",
+          "hospital",
+          "email",
+          "education",
+          "licenseNumber",
+          "certifications",
+          "availableDays",
+          "timeSlots",
+          "appointments",
+          "holidays",
+          "clinicAddress",
+          "reviews",
+          "maxPatientsPerDay",
+          "city",
+          "state",
+          "zipCode",
+          "uploadedBy",
+          "userId",
+        ],
+      },
+      offset: 0,
+      limit: 4,
+    });
 
-//     if (!doctors) return next(new ErrorHandler("Error: Doctor not found", 404));
+    if (!doctors) return next(new ErrorHandler("No record found", 404));
 
-//     res.status(200).json({
-//       success: true,
-//       message: "Admin - Doctors Information retrieved",
-//       doctors,
-//     });
-//   }
-// );
+    res.status(200).json({
+      success: true,
+      message: "Doctors data fetched",
+      doctors,
+    });
+  }
+);

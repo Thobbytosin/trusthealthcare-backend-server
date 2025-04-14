@@ -28,6 +28,11 @@ const ErrorMiddleware = (
     err = new ErrorHandler(message, 400);
   }
 
+  if (err.message.startsWith("invalid input syntax for type")) {
+    const message = "Invalid Input: Your input cannot be processed";
+    err = new ErrorHandler(message, 422);
+  }
+
   res.status(err.statusCode).json({ success: false, message: err.message });
 };
 

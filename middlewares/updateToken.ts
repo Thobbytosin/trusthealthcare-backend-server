@@ -36,7 +36,7 @@ export const updateToken = catchAsyncError(
       process.env.SIGN_IN_ACCESS_SECRET_KEY as string,
       {
         expiresIn:
-          `${Number(process.env.ACCESS_TOKEN_EXPIRATION) as any}d` || "1d",
+          `${Number(process.env.ACCESS_TOKEN_EXPIRATION) as any}m` || "30m",
       }
     );
 
@@ -45,13 +45,14 @@ export const updateToken = catchAsyncError(
       process.env.SIGN_IN_REFRESH_SECRET_KEY as string,
       {
         expiresIn:
-          `${Number(process.env.REFRESH_TOKEN_EXPIRATION) as any}d` || "7d",
+          `${Number(process.env.REFRESH_TOKEN_EXPIRATION) as any}d` || "5d",
       }
     );
 
     res.cookie("access_token", accessToken, accessTokenOptions);
     res.cookie("refresh_token", refreshToken, refreshTokenOptions);
 
+    req.user = user;
     next();
   }
 );

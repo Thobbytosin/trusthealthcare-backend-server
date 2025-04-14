@@ -1,13 +1,14 @@
 import { Request } from "express";
-import { IUser } from "../models/user.model";
-import { IDoctor } from "../models/doctor.model";
+import { Doctor, IDoctor } from "../models/doctor.model";
 import { File } from "formidable";
+import { IUser } from "../models/user.model";
+import { ID } from "aws-sdk/clients/s3";
 
 declare global {
   namespace Express {
     interface Request {
       user: IUser;
-      data: IDoctor;
+      doctor: IDoctor;
       files: { [key: string]: File | File[] };
     }
   }
