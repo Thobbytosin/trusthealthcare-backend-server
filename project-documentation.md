@@ -100,36 +100,36 @@
 
 ### 7.1 Authentication Controller
 
-### a. Register User (authRouter.post("/signup", registerUser))
+### a. Register User
 
 - Get the user data from the request body and validate them.
 - Create a verification code and a verification token using jwt to verify user email (make token valid only for few minutes).
 - Send the token to the user email or user phone number.
 
-### b. Verify Account (authRouter.post("/account-verification", accountVerification))
+### b. Verify Account
 
 - Validate the verification code and token provided from the request.
 - Verify if user does not exists already in the database.
 - Save user to the database.
 
-### c. Resend Verification Code (authRouter.post("/resend-verification-code", resendVerificationCode))
+### c. Resend Verification Code
 
 - If initial verification token/code is invalid, user can request for another verification code.
 - Repeat the steps again for the register user function.
 
-### d. Login User (authRouter.post("/login", loginUser))
+### d. Login User
 
 - Validate the email and password
 - Update the user login date/time in the database
 - Generate 2 tokens with jwt (access and refresh) and save in the response cookie (security)
 - Access token should have short expiration time while Refresh token should have longer expiration time.
 
-### e. Sign Out User (authRouter.post("/signout", isUserAuthenticated, signOut))
+### e. Sign Out User
 
 - Check if user is logged in first before signing out
 - Clear the tokens from the response
 
-### f. Refresh Tokens - (authRouter.get("/refresh-tokens", updateToken, refreshToken))
+### f. Refresh Tokens
 
 - Refresh Tokens to keep tokens constantly changing
 - If old refresh token is still valid, generate new ones. Else, user should login again
@@ -138,18 +138,18 @@
 
 ### 7.2 User Controller
 
-### a. Forgot Password - (userRouter.post("/forgot-password", hasPasswordChangedLast24Hours, forgotPassword))
+### a. Forgot Password
 
 - Check item 4.4 for the "hasPasswordChangedLast24Hours" middleware
 - Create a reset token (with expiration time) and code and send to the user email or phone.
 - Save the reset token in the response cookie
 
-### b. Reset Password - (userRouter.post("/reset-password", resetPassword))
+### b. Reset Password
 
 - Validate the token and the new user password
 - Update the password reset time and save to the database
 
-### c. Fetch User Information - (userRouter.get("/me", isUserAuthenticated, getUserData))
+### c. Fetch User Information
 
 - Fetch user details from the database
 
@@ -157,28 +157,28 @@
 
 ### 7.3 Doctor Controller
 
-### a. Upload Doctor - (doctorRouter.post("/upload-doctor", isUserAuthenticated, authorizeUpload("admin", "user"), formParser, validateDoctorData, uploadDoctor))
+### a. Upload Doctor
 
 - Validate the form from the client
 - Upload doctor image to cloudinary server
 - Create Doctor
 
-### b. Update Doctor - (doctorRouter.put("/update-doctor/:doctor_id", isUserAuthenticated, hasDoctorProfileBeenUpdatedLast7days, authorizeUpload("admin", "doctor"), formParser, validateDoctorData, updateDoctor))
+### b. Update Doctor
 
 - Check if account has been updated in a week
 - Repeat same as upload doctor
 
-### c. Get Doctors (for landing page) - (doctorRouter.get("/get-some-doctors-free", getSomeDoctorsUnauthenticated))
+### c. Get Doctors (for landing page)
 
 - Fetch few doctors for landing page
 - Limit the amount of doctors and also hide some vital fields
 
-### d. Get Doctors (for doctors page) - (doctorRouter.get("/get-all-doctors-user", isUserAuthenticated, getAllDoctorsList))
+### d. Get Doctors (for doctors page)
 
 - Fetch doctors
 - Apply the search, filter, sort functionality
 
-### e. Get a Doctor (for doctor details page) - (doctorRouter.get("/get-doctor/:doctor_id", isUserAuthenticated, getDoctor))
+### e. Get a Doctor (for doctor details page)
 
 - Fetch doctors detail using their id
 - Display neccessary fields
