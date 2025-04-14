@@ -2,26 +2,31 @@ import {
   Column,
   DataType,
   Default,
+  ForeignKey,
   HasMany,
   Model,
   Table,
 } from "sequelize-typescript";
 import { Appointment } from "./appointment.model";
+import { User } from "./user.model";
 
-export interface IDoctor extends Document {
+export interface IDoctor {
+  id: string;
   name: string;
   email: string;
+  securityQuestion: string;
   securityAnswer: string;
-  specialization: string;
-  experience: string;
+  specialization: string[];
+  workExperience: { firm: string; designation: string; duration: string }[];
+  yearsOfExperience: number;
   education: string[];
   hospital: string;
+  clinicAddress: string;
   licenseNumber: string;
   certifications: string[];
   availableDays: string[];
   timeSlots: { [key: string]: string[] };
   holidays?: Date[];
-  clinicAddress: string;
   city: string;
   state: string;
   zipCode: number;
@@ -33,7 +38,10 @@ export interface IDoctor extends Document {
   maxPatientsPerDay: number;
   about: string;
   thumbnail: { id: string; url: string };
-  verificationStatus: "Processing" | "Verified" | "Failed" | "Completed";
+  verificationStatus: "Processing" | "Verified" | "Failed";
+  uploadedBy: "user" | "admin";
+  userId: string;
+  available: boolean;
 }
 
 interface Review {
@@ -86,19 +94,37 @@ export class Doctor extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
+  securityQuestion!: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
   securityAnswer!: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.ARRAY(DataType.STRING),
     allowNull: false,
   })
-  specialization!: string;
+  specialization!: string[];
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.INTEGER,
     allowNull: false,
   })
-  experience!: string;
+  yearsOfExperience!: number;
+
+  @Column({
+    type: DataType.JSONB,
+    allowNull: false,
+  })
+  workExperience!: [
+    {
+      firm: string;
+      designation: string;
+      duration: string;
+    }
+  ];
 
   @Column({
     type: DataType.ARRAY(DataType.STRING),
@@ -111,6 +137,12 @@ export class Doctor extends Model {
     allowNull: false,
   })
   hospital!: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  clinicAddress!: string;
 
   @Column({
     type: DataType.STRING,
@@ -140,12 +172,6 @@ export class Doctor extends Model {
     type: DataType.ARRAY(DataType.DATE),
   })
   holidays?: Date[];
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-  })
-  clinicAddress!: string;
 
   @Column({
     type: DataType.STRING,
@@ -212,17 +238,30 @@ export class Doctor extends Model {
   };
 
   @Column({
+    type: DataType.ENUM("Processing", "Verified", "Failed", "Completed"),
+    defaultValue: "Processing",
+  })
+  verificationStatus!: "Processing" | "Verified" | "Failed";
+
+  @Column({
+    type: DataType.ENUM("user", "admin"),
+    allowNull: false,
+  })
+  uploadedBy!: "user" | "admin";
+
+  @ForeignKey(() => User)
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+  })
+  userId!: string;
+
+  @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
     defaultValue: true,
   })
   available!: boolean;
-
-  @Column({
-    type: DataType.ENUM("Processing", "Verified", "Failed", "Completed"),
-    defaultValue: "Processing",
-  })
-  verificationStatus!: "Processing" | "Verified" | "Failed" | "Completed";
 }
 
 // import mongoose, { Document, Model, Schema } from "mongoose";

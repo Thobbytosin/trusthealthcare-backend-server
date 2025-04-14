@@ -1,5 +1,24 @@
-import { Column, DataType, Default, Model, Table } from "sequelize-typescript";
+import {
+  Column,
+  DataType,
+  Default,
+  ForeignKey,
+  Model,
+  Table,
+} from "sequelize-typescript";
+import { Doctor } from "./doctor.model";
 
+export interface IUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: { id: string; url: string };
+  role: ["user" | "patient" | "doctor" | "admin"];
+  lastLogin: Date | null;
+  lastPasswordReset?: Date;
+  verified: boolean;
+  doctorId: string | null;
+}
 @Table({
   tableName: "users",
   defaultScope: {
@@ -61,7 +80,7 @@ export class User extends Model {
       isIn: [["user", "patient", "doctor", "admin"]],
     },
   })
-  role!: "user" | "patient" | "doctor" | "admin";
+  role!: string[];
 
   @Default(false)
   @Column({
@@ -73,14 +92,21 @@ export class User extends Model {
   @Default(DataType.NOW)
   @Column({
     type: DataType.DATE,
-    allowNull: false,
+    defaultValue: null,
   })
-  lastLogin!: Date;
+  lastLogin?: Date | null;
 
   @Column({
     type: DataType.DATE,
   })
   lastPasswordReset?: Date;
+
+  @ForeignKey(() => Doctor)
+  @Column({
+    type: DataType.UUID,
+    defaultValue: null,
+  })
+  doctorId!: string | null;
 }
 
 //////// MONGO DB

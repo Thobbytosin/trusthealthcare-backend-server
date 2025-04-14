@@ -6,6 +6,7 @@ import {
   createVerificationToken,
   isEmailValid,
   isPasswordStrong,
+  logUserActivity,
 } from "../utils/helpers";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -31,7 +32,14 @@ export const registerUser = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const { name, email, password }: IRegistration = req.body;
 
-    if (!name || !email || !password) {
+    if (
+      !name ||
+      !email ||
+      !password ||
+      name.trim() === "" ||
+      email.trim() === "" ||
+      password.trim() === ""
+    ) {
       return next(new ErrorHandler("All fields are required", 400));
     }
 
@@ -104,7 +112,7 @@ export const accountVerification = catchAsyncError(
       return next(new ErrorHandler("Verification code has expired", 403));
     }
 
-    if (!verificationCode) {
+    if (!verificationCode || verificationCode.trim() === "") {
       return next(new ErrorHandler("All fields are required", 403));
     }
 
@@ -141,6 +149,14 @@ export const accountVerification = catchAsyncError(
         subject: "Welcome Message",
         templateData: mailData,
         templateName: "welcome-email.ejs",
+      });
+
+      await logUserActivity({
+        userId: user.id,
+        action: "Signed up",
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"],
+        next,
       });
 
       res.status(201).json({
@@ -213,7 +229,7 @@ export const loginUser = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
 
-    if (!email || !password)
+    if (!email || !password || email.trim() === "" || password.trim() === "")
       return next(new ErrorHandler("All fields are required", 403));
 
     // check if user exists
@@ -232,11 +248,11 @@ export const loginUser = catchAsyncError(
     await user.save();
 
     // remove the password when sending user details to the client
-    const editedUser = await User.findOne({ where: { email } });
+    const newUser = await User.findOne({ where: { email } });
 
     // sign in user
-    if (editedUser) {
-      signInWithCredentials(editedUser, 200, res);
+    if (newUser) {
+      signInWithCredentials(newUser, 200, res, req, next);
     }
   }
 );
@@ -244,6 +260,16 @@ export const loginUser = catchAsyncError(
 // //////////////////////////////////////////////////////////////////////////////////////////////// SIGN OUT USER
 export const signOut = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
+
+    await logUserActivity({
+      userId,
+      action: "Signed out",
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"],
+      next,
+    });
+
     res.clearCookie("access_token");
     res.clearCookie("refresh_token");
 
@@ -254,6 +280,16 @@ export const signOut = catchAsyncError(
 //////////////////////////////////////////////////////////////////////////////////////////////// UPDATE TOKEN
 export const refreshToken = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.user;
+
+    await logUserActivity({
+      userId: user.id,
+      action: "Token Refreshed",
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"],
+      next,
+    });
+
     res.status(200).json({ success: true, message: "Token Refreshed" });
   }
 );

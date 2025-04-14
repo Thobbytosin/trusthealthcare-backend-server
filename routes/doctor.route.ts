@@ -1,15 +1,14 @@
 import { Router } from "express";
-import { updateToken } from "../middlewares/updateToken";
-import { isUserAuthenticated } from "../middlewares/authentication";
-import { authorizeRoleAdmin, authorizeUpload } from "../middlewares/admin-auth";
+import {
+  hasDoctorProfileBeenUpdatedLast7days,
+  isUserAuthenticated,
+} from "../middlewares/authentication";
+import { authorizeUpload } from "../middlewares/admin-auth";
 import {
   getAllDoctorsList,
-  // deleteDoctor,
-  // editDoctor,
-  // getAllDoctorsAdmin,
-  // getAllDoctorsList,
-  // getDoctor,
-  // getDoctorAdmin,
+  getDoctor,
+  getSomeDoctorsUnauthenticated,
+  updateDoctor,
   uploadDoctor,
 } from "../controllers/doctor.controller";
 import { validateDoctorData } from "../middlewares/validatedoctorData";
@@ -17,6 +16,7 @@ import { formParser } from "../middlewares/formParser";
 
 const doctorRouter = Router();
 
+// UPLOAD A DOCTOR
 doctorRouter.post(
   "/upload-doctor",
   isUserAuthenticated,
@@ -26,47 +26,28 @@ doctorRouter.post(
   uploadDoctor
 );
 
-// edit doctor
-// doctorRouter.put(
-//   "/edit-doctor/:doctor_id",
-//   updateAccessToken,
-//   isUserAuthenticated,
-//   authorizeRoleAdminAndDoctor("administrator", "doctor"),
-//   validateDoctorData,
-//   editDoctor
-// );
+// GET SOME DOCTORS (FOR LANDING PAGE)
+doctorRouter.get("/get-some-doctors-free", getSomeDoctorsUnauthenticated);
 
-// doctorRouter.delete(
-//   "/delete-doctor/:doctor_id",
-//   updateAccessToken,
-//   isUserAuthenticated,
-//   authorizeRoleAdmin("administrator"),
-//   deleteDoctor
-// );
+// GET DOCTORS (SEARCH, SORT, FILTER)
+doctorRouter.get(
+  "/get-all-doctors-user",
+  isUserAuthenticated,
+  getAllDoctorsList
+);
 
-// doctorRouter.get(
-//   "/get-doctor/:doctor_id",
-//   updateAccessToken,
-//   isUserAuthenticated,
-//   getDoctor
-// );
+// UPDATE A DOCTOR
+doctorRouter.put(
+  "/update-doctor/:doctor_id",
+  isUserAuthenticated,
+  hasDoctorProfileBeenUpdatedLast7days,
+  authorizeUpload("admin", "doctor"),
+  formParser,
+  validateDoctorData,
+  updateDoctor
+);
 
-// doctorRouter.get(
-//   "/get-doctor-admin/:doctor_id",
-//   updateAccessToken,
-//   isUserAuthenticated,
-//   authorizeRoleAdmin("administrator"),
-//   getDoctorAdmin
-// );
-
-doctorRouter.get("/get-all-doctors-free", getAllDoctorsList);
-
-// doctorRouter.get(
-//   "/get-doctors-list-admin",
-//   isUserAuthenticated,
-//   updateToken,
-//   authorizeRoleAdmin("admin"),
-//   getAllDoctorsList
-// );
+// GET A DOCTOR
+doctorRouter.get("/get-doctor/:doctor_id", isUserAuthenticated, getDoctor);
 
 export default doctorRouter;

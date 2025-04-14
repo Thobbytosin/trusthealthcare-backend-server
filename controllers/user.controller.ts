@@ -7,6 +7,7 @@ import {
   createVerificationToken,
   isEmailValid,
   isPasswordStrong,
+  logUserActivity,
 } from "../utils/helpers";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -121,6 +122,14 @@ export const resetPassword = catchAsyncError(
         subject: "Password Reset Success",
         templateData: mailData,
         templateName: "reset-password-success-email.ejs",
+      });
+
+      await logUserActivity({
+        userId: user.id,
+        action: "Password reset",
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"],
+        next,
       });
 
       res.status(200).json({

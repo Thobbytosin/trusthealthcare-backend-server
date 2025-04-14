@@ -27,6 +27,9 @@ export const uploadToCloudinary = async (
   thumbnail: any,
   folderPath: string
 ): Promise<UploadResult> => {
+  // delete old thumbnail
+  await cloudApi.delete_resources_by_prefix(folderPath);
+
   const result = await cloudUploader.upload(thumbnail.filepath, {
     folder: folderPath,
     use_filename: true,

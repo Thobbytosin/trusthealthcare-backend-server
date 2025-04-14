@@ -5,6 +5,7 @@ import { Doctor } from "../models/doctor.model";
 import { Appointment } from "../models/appointment.model";
 import { Patient } from "../models/patient.model";
 import { Transaction } from "../models/transaction.model";
+import { UserActivityLogs } from "../models/userActivity.model";
 // import { User } from "../models/user.model";
 
 // load environment variables
@@ -18,7 +19,7 @@ const sequelize = new Sequelize({
   password: process.env.DB_PASSWORD,
   host: process.env.DB_HOST, // or your database server
   dialect: "postgres", // Specify PostgreSQL
-  models: [User, Doctor, Appointment, Patient, Transaction],
+  models: [User, Doctor, Appointment, Patient, Transaction, UserActivityLogs],
   logging: false, // Disable logging (optional)
   pool: {
     max: 10, // Maximum number of connections in the pool
@@ -29,3 +30,6 @@ const sequelize = new Sequelize({
 });
 
 export default sequelize;
+
+// KEYWORDS
+// SELECT * FROM doctors WHERE city ~* '\mikeja\M';

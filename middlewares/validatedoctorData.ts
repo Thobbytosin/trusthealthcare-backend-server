@@ -9,7 +9,8 @@ const requireFields: (keyof IDoctor)[] = [
   "about",
   "securityAnswer",
   "specialization",
-  "experience",
+  "yearsOfExperience",
+  "workExperience",
   "education",
   "hospital",
   "licenseNumber",
@@ -74,6 +75,8 @@ export const validateDoctorData = catchAsyncError(
       education: ensureArray(data.education),
       certifications: ensureArray(data.certifications),
       availableDays: ensureArray(data.availableDays),
+      workExperience: ensureArray(data.workExperience),
+      specialization: ensureArray(data.specialization),
       timeSlots: { ["Monday"]: ensureArray(data.timeSlots) },
     };
 
