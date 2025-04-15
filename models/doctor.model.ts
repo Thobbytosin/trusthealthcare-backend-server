@@ -38,6 +38,7 @@ export interface IDoctor {
   maxPatientsPerDay: number;
   about: string;
   thumbnail: { id: string; url: string };
+  image: string;
   verificationStatus: "Processing" | "Verified" | "Failed";
   uploadedBy: "user" | "admin";
   userId: string;
@@ -236,6 +237,12 @@ export class Doctor extends Model {
     id: string;
     url: string;
   };
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  image!: string;
 
   @Column({
     type: DataType.ENUM("Processing", "Verified", "Failed", "Completed"),

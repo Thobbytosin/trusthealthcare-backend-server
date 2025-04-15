@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
 import { logDoctorActivity, logUserActivity } from "./helpers";
 import { User } from "../models/user.model";
+import redis from "./redis";
 
 dotenv.config();
 
@@ -93,6 +94,10 @@ export const signInWithCredentials = async (
       next,
     });
   }
+
+  // save user to redis
+  await redis.set(`user - ${user.id}`, JSON.stringify(user)); // not expiring
+  // await redis.set(user.id, JSON.stringify(user), 'EX', 3600) //  expiring in 1 hour
 
   // send response to the client
   res.status(statusCode).json({
