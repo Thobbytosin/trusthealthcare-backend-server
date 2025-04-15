@@ -6,15 +6,16 @@ export const formParser = async (
   res: Response,
   next: NextFunction
 ) => {
-  const form = formidable();
+  const form = formidable({ multiples: true });
 
   const arrayFields = [
     "availableDays",
     "certifications",
     "education",
     "specialization",
-    "workExperience",
   ];
+
+  const jsonFields = ["workExperience", "timeSlots"];
 
   const [fields, files] = await form.parse(req as any);
 
@@ -24,11 +25,37 @@ export const formParser = async (
     const value = fields[key];
     if (!value) continue;
 
+    if (key.startsWith("timeSlots[")) {
+      continue; // process these separately
+    }
+
     if (arrayFields.includes(key)) {
       req.body[key] = value;
+    } else if (jsonFields.includes(key)) {
+      try {
+        req.body[key] = JSON.parse(value![0]);
+      } catch (e) {
+        req.body[key] = value![0];
+      }
     } else {
       req.body[key] = value![0];
     }
+  }
+
+  // Process timeSlots
+  const timeSlots: Record<string, string[]> = {};
+  for (let key in fields) {
+    if (key.startsWith("timeSlots[")) {
+      const day = key.match(/timeSlots\[(.*?)\]/)?.[1];
+      if (day && fields[key]) {
+        // Split comma-separated slots and trim whitespace
+        timeSlots[day] = fields[key]![0].split(",").map((s) => s.trim());
+      }
+    }
+  }
+
+  if (Object.keys(timeSlots).length > 0) {
+    req.body.timeSlots = timeSlots;
   }
 
   if (!req.files) req.files = {};

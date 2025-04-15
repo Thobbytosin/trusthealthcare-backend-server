@@ -4,8 +4,6 @@ import ErrorHandler from "../utils/errorHandler";
 import { User } from "../models/user.model";
 import {
   createResetPasswordToken,
-  createVerificationToken,
-  isEmailValid,
   isPasswordStrong,
   logUserActivity,
 } from "../utils/helpers";

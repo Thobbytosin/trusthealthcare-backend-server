@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
-import { logUserActivity } from "./helpers";
+import { logDoctorActivity, logUserActivity } from "./helpers";
 import { User } from "../models/user.model";
 
 dotenv.config();
@@ -76,13 +76,23 @@ export const signInWithCredentials = async (
   res.cookie("access_token", accessToken, accessTokenOptions);
   res.cookie("refresh_token", refreshToken, refreshTokenOptions);
 
-  await logUserActivity({
-    userId: user.id,
-    action: "Logged in",
-    ipAddress: req.ip,
-    userAgent: req.headers["user-agent"],
-    next,
-  });
+  if (user.signedInAs === "user") {
+    await logUserActivity({
+      userId: user.id,
+      action: "Logged in",
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"],
+      next,
+    });
+  } else if (user.signedInAs === "doctor") {
+    await logDoctorActivity({
+      doctorId: user.doctorId || "",
+      action: "Doctor Logged in",
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"],
+      next,
+    });
+  }
 
   // send response to the client
   res.status(statusCode).json({

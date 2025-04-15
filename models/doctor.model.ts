@@ -17,7 +17,7 @@ export interface IDoctor {
   securityQuestion: string;
   securityAnswer: string;
   specialization: string[];
-  workExperience: { firm: string; designation: string; duration: string }[];
+  workExperience: { hospital: string; role: string; duration: string }[];
   yearsOfExperience: number;
   education: string[];
   hospital: string;
@@ -29,7 +29,7 @@ export interface IDoctor {
   holidays?: Date[];
   city: string;
   state: string;
-  zipCode: number;
+  zipCode: string;
   phone: string;
   altPhone?: string;
   ratings?: number;
@@ -120,8 +120,8 @@ export class Doctor extends Model {
   })
   workExperience!: [
     {
-      firm: string;
-      designation: string;
+      hospital: string;
+      role: string;
       duration: string;
     }
   ];
@@ -186,10 +186,10 @@ export class Doctor extends Model {
   state!: string;
 
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.STRING,
     allowNull: false,
   })
-  zipCode!: number;
+  zipCode!: string;
 
   @Column({
     type: DataType.STRING,

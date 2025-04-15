@@ -8,6 +8,7 @@ const requireFields: (keyof IDoctor)[] = [
   "email",
   "about",
   "securityAnswer",
+  "securityQuestion",
   "specialization",
   "yearsOfExperience",
   "workExperience",
@@ -69,6 +70,8 @@ export const validateDoctorData = catchAsyncError(
       return [];
     };
 
+    // console.log(data);
+
     const formattedData = {
       ...data,
       city: data.city.toLowerCase(),
@@ -77,7 +80,13 @@ export const validateDoctorData = catchAsyncError(
       availableDays: ensureArray(data.availableDays),
       workExperience: ensureArray(data.workExperience),
       specialization: ensureArray(data.specialization),
-      timeSlots: { ["Monday"]: ensureArray(data.timeSlots) },
+      timeSlots: data.availableDays?.reduce(
+        (acc: Record<string, any>, day: string) => {
+          acc[day] = ensureArray(data?.timeSlots[day]);
+          return acc;
+        },
+        {}
+      ),
     };
 
     // check if user is uploading more than 1 image

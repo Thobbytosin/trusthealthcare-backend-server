@@ -6,6 +6,7 @@ import {
   createVerificationToken,
   isEmailValid,
   isPasswordStrong,
+  logDoctorActivity,
   logUserActivity,
 } from "../utils/helpers";
 import bcryptjs from "bcryptjs";
@@ -227,7 +228,7 @@ export const resendVerificationCode = catchAsyncError(
 // //////////////////////////////////////////////////////////////////////////////////////////////// SIGN IN USER
 export const loginUser = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     if (!email || !password || email.trim() === "" || password.trim() === "")
       return next(new ErrorHandler("All fields are required", 403));
@@ -237,6 +238,18 @@ export const loginUser = catchAsyncError(
 
     if (!user) return next(new ErrorHandler("Account not found", 404));
 
+    // user must be a doctor to sign in as a doctor
+    if (
+      role === "doctor" &&
+      !user.role.some((role) => ["doctor"].includes(role))
+    )
+      return next(
+        new ErrorHandler(
+          "Permission denied: You are not registered as a doctor",
+          403
+        )
+      );
+
     // check if password matches
     const isPasswordMatch = bcryptjs.compareSync(password, user.password || "");
 
@@ -245,6 +258,13 @@ export const loginUser = catchAsyncError(
 
     // set the user last login
     user.lastLogin = new Date();
+    if (role === "doctor") {
+      user.signedInAs = role;
+    } else if (role === "admin") {
+      user.signedInAs = role;
+    } else {
+      user.signedInAs = "user";
+    }
     await user.save();
 
     // remove the password when sending user details to the client
@@ -253,6 +273,8 @@ export const loginUser = catchAsyncError(
     // sign in user
     if (newUser) {
       signInWithCredentials(newUser, 200, res, req, next);
+    } else {
+      return next(new ErrorHandler("Error signing in", 408));
     }
   }
 );
@@ -260,15 +282,25 @@ export const loginUser = catchAsyncError(
 // //////////////////////////////////////////////////////////////////////////////////////////////// SIGN OUT USER
 export const signOut = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.user.id;
+    const loggedInUser = req.user;
 
-    await logUserActivity({
-      userId,
-      action: "Signed out",
-      ipAddress: req.ip,
-      userAgent: req.headers["user-agent"],
-      next,
-    });
+    if (loggedInUser.signedInAs === "user") {
+      await logUserActivity({
+        userId: loggedInUser.id,
+        action: "Logged out",
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"],
+        next,
+      });
+    } else if (loggedInUser.signedInAs === "doctor") {
+      await logDoctorActivity({
+        doctorId: loggedInUser.doctorId || "",
+        action: "Doctor Logged out",
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"],
+        next,
+      });
+    }
 
     res.clearCookie("access_token");
     res.clearCookie("refresh_token");
@@ -282,13 +314,23 @@ export const refreshToken = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
 
-    await logUserActivity({
-      userId: user.id,
-      action: "Token Refreshed",
-      ipAddress: req.ip,
-      userAgent: req.headers["user-agent"],
-      next,
-    });
+    if (user.signedInAs === "user") {
+      await logUserActivity({
+        userId: user.id,
+        action: "Token Refreshed",
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"],
+        next,
+      });
+    } else if (user.signedInAs === "doctor") {
+      await logDoctorActivity({
+        doctorId: user.doctorId || "",
+        action: "Doctor Token Refreshed",
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"],
+        next,
+      });
+    }
 
     res.status(200).json({ success: true, message: "Token Refreshed" });
   }

@@ -18,6 +18,7 @@ export interface IUser {
   lastPasswordReset?: Date;
   verified: boolean;
   doctorId: string | null;
+  signedInAs?: "user" | "doctor";
 }
 @Table({
   tableName: "users",
@@ -76,9 +77,6 @@ export class User extends Model {
   @Column({
     type: DataType.ARRAY(DataType.STRING),
     allowNull: false,
-    validate: {
-      isIn: [["user", "patient", "doctor", "admin"]],
-    },
   })
   role!: string[];
 
@@ -107,6 +105,11 @@ export class User extends Model {
     defaultValue: null,
   })
   doctorId!: string | null;
+
+  @Column({
+    type: DataType.ENUM("user", "doctor"),
+  })
+  signedInAs?: "user" | "doctor";
 }
 
 //////// MONGO DB

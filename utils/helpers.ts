@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import ErrorHandler from "./errorHandler";
 import { UserActivityLogs } from "../models/userActivity.model";
 import { NextFunction } from "express";
+import { DoctorActivityLogs } from "../models/doctorActivity.model";
 
 export const isPasswordStrong = (password: string) => {
   const passwordLength = password.trim().length;
@@ -92,6 +93,55 @@ export const logUserActivity = async ({
     if (shouldLog) {
       return await UserActivityLogs.create({
         userId,
+        action,
+        userAgent,
+        ipAddress,
+      });
+    }
+  } catch (err: any) {
+    return next(new ErrorHandler(err.message, 400));
+  }
+};
+
+export const logDoctorActivity = async ({
+  doctorId,
+  action,
+  ipAddress,
+  userAgent,
+  next,
+}: {
+  doctorId: string;
+  action: string;
+  ipAddress?: string;
+  userAgent?: string;
+  next: NextFunction;
+}) => {
+  try {
+    if (action !== "Doctor Token Refreshed") {
+      return await DoctorActivityLogs.create({
+        doctorId,
+        action,
+        userAgent,
+        ipAddress,
+      });
+    }
+
+    const lastRefresh = await DoctorActivityLogs.findOne({
+      where: {
+        doctorId,
+        action: "Doctor Token Refreshed",
+      },
+      order: [["createdAt", "DESC"]], // picks the last token refreshed
+    });
+
+    // for token refreshed, log only after 30 minutes to avoid multiple logs
+    const shouldLog =
+      !lastRefresh ||
+      Date.now() - new Date(lastRefresh.createdAt).getTime() > 30 * 60 * 1000;
+
+    if (shouldLog) {
+      return await DoctorActivityLogs.create({
+        doctorId,
         action,
         userAgent,
         ipAddress,
