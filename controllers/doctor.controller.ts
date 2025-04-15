@@ -6,6 +6,7 @@ import { Doctor } from "../models/doctor.model";
 import { Op } from "sequelize";
 import { User } from "../models/user.model";
 import { signOut } from "./auth.controller";
+import { logDoctorActivity } from "../utils/helpers";
 
 //////////////////////////////////////////////////////////////////////////////////////////////// UPLOAD DOCTOR
 export const uploadDoctor = catchAsyncError(
@@ -83,6 +84,14 @@ export const uploadDoctor = catchAsyncError(
 
     if (!doctor)
       return next(new ErrorHandler("Error uploading doctor details", 400));
+
+    await logDoctorActivity({
+      doctorId: doctor.id || "",
+      action: "Doctor Signed up",
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"],
+      next,
+    });
 
     res.status(201).json({
       success: true,

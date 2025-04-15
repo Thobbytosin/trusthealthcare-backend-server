@@ -13,12 +13,7 @@ export const updateToken = catchAsyncError(
     const { refresh_token } = req.cookies;
 
     if (!refresh_token)
-      return next(
-        new ErrorHandler(
-          "Access Restricted: You are not currently logged in.",
-          403
-        )
-      );
+      return next(new ErrorHandler("Session has expired: Kindly log in.", 408));
 
     // verify if token is valid
     const decode = jwt.verify(

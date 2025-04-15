@@ -3,6 +3,7 @@ import catchAsyncError from "../middlewares/catchAsyncError";
 import ErrorHandler from "../utils/errorHandler";
 import { User } from "../models/user.model";
 import { Doctor } from "../models/doctor.model";
+import { logDoctorActivity } from "../utils/helpers";
 
 //////////////////////////////////////////////////////////////////////////////////////////////// DELETE USER ACCOUNT (ADMIN)
 export const deleteUser = catchAsyncError(
@@ -86,6 +87,9 @@ export const doctorApplicationApproval = catchAsyncError(
     if (!user || !doctor)
       return next(new ErrorHandler("User/Doctor not found", 404));
 
+    if (user.role.some((role) => ["doctor"].includes(role)))
+      return next(new ErrorHandler("Your account is already verified", 408));
+
     user.role = [...user.role, "doctor"];
     user.doctorId = doctor.id;
     const updatedUser = await user.save();
@@ -98,6 +102,14 @@ export const doctorApplicationApproval = catchAsyncError(
 
     if (!updatedDoctor)
       return next(new ErrorHandler("Error updating doctor", 400));
+
+    await logDoctorActivity({
+      doctorId: updatedDoctor.id || "",
+      action: "Doctor Application Approved",
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"],
+      next,
+    });
 
     res.status(200).json({
       success: true,
@@ -118,6 +130,14 @@ export const doctorApplicationDenial = catchAsyncError(
 
     doctor.verificationStatus = "Failed";
     doctor.save();
+
+    await logDoctorActivity({
+      doctorId: doctor.id || "",
+      action: "Doctor Application Failed",
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"],
+      next,
+    });
 
     res.status(200).json({
       success: true,

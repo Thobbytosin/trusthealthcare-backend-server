@@ -6,6 +6,7 @@ import { Appointment } from "../models/appointment.model";
 import { Patient } from "../models/patient.model";
 import { Transaction } from "../models/transaction.model";
 import { UserActivityLogs } from "../models/userActivity.model";
+import { DoctorActivityLogs } from "../models/doctorActivity.model";
 // import { User } from "../models/user.model";
 
 // load environment variables
@@ -19,7 +20,15 @@ const sequelize = new Sequelize({
   password: process.env.DB_PASSWORD,
   host: process.env.DB_HOST, // or your database server
   dialect: "postgres", // Specify PostgreSQL
-  models: [User, Doctor, Appointment, Patient, Transaction, UserActivityLogs],
+  models: [
+    User,
+    Doctor,
+    Appointment,
+    Patient,
+    Transaction,
+    UserActivityLogs,
+    DoctorActivityLogs,
+  ],
   logging: false, // Disable logging (optional)
   pool: {
     max: 10, // Maximum number of connections in the pool
