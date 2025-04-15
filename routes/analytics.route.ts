@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { isUserAuthenticated } from "../middlewares/authentication";
 import { authorizeRoleAdmin } from "../middlewares/admin-auth";
-import { getUserAnalytics } from "../controllers/analytics.controller";
+import {
+  getDoctorsAnalytics,
+  getUsersAnalytics,
+} from "../controllers/analytics.controller";
 
 const analyticsRouter = Router();
 
@@ -10,7 +13,15 @@ analyticsRouter.get(
   "/analytics/users",
   isUserAuthenticated,
   authorizeRoleAdmin("admin"),
-  getUserAnalytics
+  getUsersAnalytics
+);
+
+// GET DOCTORS ANALYTICS (ADMIN)
+analyticsRouter.get(
+  "/analytics/doctors",
+  isUserAuthenticated,
+  authorizeRoleAdmin("admin"),
+  getDoctorsAnalytics
 );
 
 export default analyticsRouter;
