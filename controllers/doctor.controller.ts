@@ -60,6 +60,8 @@ export const uploadDoctor = catchAsyncError(
         id: thumbnailId,
         url: thumbnailUrl,
       };
+
+      data.image = thumbnailUrl;
     } catch (error: any) {
       return res
         .status(400)
@@ -277,7 +279,6 @@ export const getAllDoctorsList = catchAsyncError(
 export const getSomeDoctorsUnauthenticated = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const doctors = await Doctor.findAll({
-      where: { available: true },
       attributes: {
         exclude: [
           "securityAnswer",
@@ -300,6 +301,11 @@ export const getSomeDoctorsUnauthenticated = catchAsyncError(
           "zipCode",
           "uploadedBy",
           "userId",
+          "workExperience",
+          "createdAt",
+          "updatedAt",
+          "securityQuestion",
+          "thumbnail",
         ],
       },
       offset: 0,

@@ -1,17 +1,22 @@
-import { Redis } from "ioredis";
+import Redis from "ioredis";
 import dotenv from "dotenv";
+import { error } from "console";
 
 dotenv.config();
 
-// for caching
+const redis = new Redis({
+  port: 6379,
+  host: "127.0.0.1",
+  username: process.env.REDIS_USERNAME,
+  password: process.env.REDIS_PASSWORD,
+});
 
-const redisClient = () => {
-  if (process.env.REDIS_URL) {
-    console.log("REDIS DATABASE CONNECTED");
+redis.on("connect", () => {
+  console.log("REDIS CONNECTED");
+});
 
-    return process.env.REDIS_URL;
-  }
-  throw new Error("REDIS CONNECTION FAILED");
-};
+redis.on("error", () => {
+  console.log("REDIS ERROR CONNECTING", error);
+});
 
-export const redis = new Redis(redisClient());
+export default redis;

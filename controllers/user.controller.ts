@@ -16,6 +16,7 @@ import {
   signInWithCredentials,
   verificationTokenOptions,
 } from "../utils/token";
+import redis from "../utils/redis";
 
 dotenv.config();
 
@@ -144,9 +145,17 @@ export const resetPassword = catchAsyncError(
 export const getUserData = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user.id;
-    const user = await User.findByPk(userId);
-    if (!user) return next(new ErrorHandler("Account not found", 404));
 
-    res.status(200).json({ success: true, user });
+    const cachedData = await redis.get(`user - ${userId}`);
+
+    // if the data is in redis, no need to fetch from progressSql
+    if (cachedData) {
+      res.status(200).json({ success: true, user: JSON.parse(cachedData) });
+    } else {
+      const user = await User.findByPk(userId);
+      if (!user) return next(new ErrorHandler("Account not found", 404));
+
+      res.status(200).json({ success: true, user });
+    }
   }
 );
