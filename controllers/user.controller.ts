@@ -11,22 +11,10 @@ import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { sendMail } from "../utils/sendMail";
-import {
-  resetTokenOptions,
-  signInWithCredentials,
-  verificationTokenOptions,
-} from "../utils/token";
+import { resetTokenOptions } from "../utils/token";
 import redis from "../utils/redis";
 
 dotenv.config();
-
-interface IRegistration {
-  name: string;
-  email: string;
-  password: string;
-  avatar?: string;
-  verified?: boolean;
-}
 
 // //////////////////////////////////////////////////////////////////////////////////////////////// FORGOT PASSWORD
 export const forgotPassword = catchAsyncError(
