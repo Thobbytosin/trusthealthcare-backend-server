@@ -17,6 +17,7 @@ import {
   signInWithCredentials,
   verificationTokenOptions,
 } from "../utils/token";
+import redis from "../utils/redis";
 
 dotenv.config();
 
@@ -304,6 +305,9 @@ export const signOut = catchAsyncError(
 
     res.clearCookie("access_token");
     res.clearCookie("refresh_token");
+
+    // delete user from db
+    await redis.del(`user - ${loggedInUser.id}`);
 
     res.status(200).json({ success: true, message: "Signed out" });
   }

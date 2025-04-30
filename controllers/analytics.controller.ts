@@ -12,11 +12,37 @@ export const getUsersAnalytics = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const oneWeekAgo = moment().subtract(7, "days").toDate();
 
+    const twoWeeksAgo = moment().subtract(14, "days").toDate();
+
     const totalUsers = await User.count();
 
-    const newUsers = await User.count({
+    const newUsersInOneWeek = await User.count({
       where: { createdAt: { [Op.gte]: oneWeekAgo } },
     });
+
+    const newUsersInTwoWeeks = await User.count({
+      where: { createdAt: { [Op.gte]: twoWeeksAgo, [Op.lt]: oneWeekAgo } },
+    });
+
+    // calculate percentage increase/dcerease
+    let usersPercentageChange = 0;
+    let trend = "no change";
+
+    if (newUsersInTwoWeeks === 0 && newUsersInOneWeek > 0) {
+      usersPercentageChange = 100;
+      trend = "increase";
+    } else if (newUsersInTwoWeeks > 0) {
+      usersPercentageChange =
+        ((newUsersInOneWeek - newUsersInTwoWeeks) / newUsersInTwoWeeks) * 100;
+      trend =
+        usersPercentageChange > 0
+          ? "increase"
+          : usersPercentageChange < 0
+          ? "decrease"
+          : "no change";
+
+      usersPercentageChange = Math.abs(usersPercentageChange); // always return +ve value
+    }
 
     const logins = await UserActivityLogs.count({
       where: { action: "Logged in", createdAt: { [Op.gte]: oneWeekAgo } },
@@ -42,9 +68,11 @@ export const getUsersAnalytics = catchAsyncError(
       success: true,
       message: "Users Analytics Fetched",
       totalUsers,
-      newUsers,
+      newUsersInOneWeek,
       activeLastOneWeek,
       usersLogoutsLastOneWeek,
+      usersPercentageChange: usersPercentageChange.toFixed(2),
+      trend,
     });
   }
 );

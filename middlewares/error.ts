@@ -14,12 +14,17 @@ const ErrorMiddleware = (
   err.name = err.name || "Server Error";
 
   if (err.name === "TokenExpiredError" || err.message === "jwt expired") {
-    const message = "Session has ended. Kindly Login to access this resource.";
+    const message = "Session has ended. Kindly Login to access this.";
     err = new ErrorHandler(message, 400);
   }
 
   if (err.message === "invalid signature") {
     const message = "Invalid Token.";
+    err = new ErrorHandler(message, 400);
+  }
+
+  if (err.name === "JsonWebTokenError") {
+    const message = "Token has expired. Kindly login.";
     err = new ErrorHandler(message, 400);
   }
 

@@ -9,6 +9,8 @@ import doctorRouter from "./routes/doctor.route";
 import authRouter from "./routes/auth.route";
 import adminRouter from "./routes/admin.route";
 import analyticsRouter from "./routes/analytics.route";
+import { checkCookieConsent } from "./middlewares/cookie-consent";
+import suggestionRouter from "./routes/suggestion.route";
 
 export const app = express();
 
@@ -42,11 +44,12 @@ const limiter = rateLimit({
 });
 
 // ROUTES
-app.use("/api/v1/", authRouter);
-app.use("/api/v1/", userRouter);
-app.use("/api/v1/", doctorRouter);
-app.use("/api/v1/", adminRouter);
-app.use("/api/v1/", analyticsRouter);
+app.use("/api/v1/auth", checkCookieConsent, authRouter);
+app.use("/api/v1/user", checkCookieConsent, userRouter);
+app.use("/api/v1/doctor", doctorRouter);
+app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/analytics", analyticsRouter);
+app.use("/api/v1/suggestion", suggestionRouter);
 
 // test api
 app.get("/test", async (req, res) => {

@@ -7,6 +7,7 @@ import { Patient } from "../models/patient.model";
 import { Transaction } from "../models/transaction.model";
 import { UserActivityLogs } from "../models/userActivity.model";
 import { DoctorActivityLogs } from "../models/doctorActivity.model";
+import { Suggestion } from "../models/suggestion.model";
 // import { User } from "../models/user.model";
 
 // load environment variables
@@ -28,6 +29,7 @@ const sequelize = new Sequelize({
     Transaction,
     UserActivityLogs,
     DoctorActivityLogs,
+    Suggestion,
   ],
   logging: false, // Disable logging (optional)
   pool: {
