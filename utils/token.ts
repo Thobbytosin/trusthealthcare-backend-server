@@ -18,7 +18,7 @@ const isProduction = process.env.NODE_ENV === "production";
 
 // create the tokens expiration time
 const accessTokenExpiration: any =
-  Number(process.env.ACCESS_TOKEN_EXPIRATION) || 30;
+  Number(process.env.ACCESS_TOKEN_EXPIRATION) || 1;
 
 const refreshTokenExpiration: any =
   Number(process.env.REFRESH_TOKEN_EXPIRATION) || 5;
@@ -32,7 +32,7 @@ export const accessTokenOptions: ITokenOptions = {
 };
 
 export const refreshTokenOptions: ITokenOptions = {
-  maxAge: refreshTokenExpiration * 24 * 60 * 60 * 1000,
+  maxAge: refreshTokenExpiration * 24 * 60 * 60 * 1000, // days
   httpOnly: true,
   sameSite: isProduction ? "none" : "lax",
   secure: isProduction,
@@ -66,7 +66,7 @@ export const signInWithCredentials = async (
     { expiresIn: `${process.env.ACCESS_TOKEN_EXPIRATION as any}m` || "30m" }
   );
 
-  //   generate unique refresh token when user logs in
+  // generate unique refresh token when user logs in
   const refreshToken = jwt.sign(
     { user },
     process.env.SIGN_IN_REFRESH_SECRET_KEY as string,
@@ -96,7 +96,12 @@ export const signInWithCredentials = async (
   }
 
   // save user to redis
-  await redis.set(`user - ${user.id}`, JSON.stringify(user)); // not expiring
+  await redis.set(
+    `user - ${user.id}`,
+    JSON.stringify(user),
+    "EX",
+    14 * 24 * 60 * 60
+  ); // delete after 14 days (14x24x60x60)
   // await redis.set(user.id, JSON.stringify(user), 'EX', 3600) //  expiring in 1 hour
 
   // send response to the client

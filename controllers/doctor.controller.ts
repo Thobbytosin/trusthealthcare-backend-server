@@ -7,6 +7,8 @@ import { Op } from "sequelize";
 import { User } from "../models/user.model";
 import { signOut } from "./auth.controller";
 import { logDoctorActivity } from "../utils/helpers";
+import { Sequelize } from "sequelize-typescript";
+import redis from "../utils/redis";
 
 //////////////////////////////////////////////////////////////////////////////////////////////// UPLOAD DOCTOR
 export const uploadDoctor = catchAsyncError(
@@ -154,38 +156,58 @@ export const updateDoctor = catchAsyncError(
 export const getDoctor = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const doctorId = req.params.doctor_id;
-    const { role } = req.query;
 
-    const doctor = await Doctor.findOne({
-      where: { id: doctorId },
-      attributes: {
-        exclude: [
-          "securityAnswer",
-          "phone",
-          "altPhone",
-          "hospital",
-          "email",
-          "education",
-          "licenseNumber",
-          "certifications",
-          "availableDays",
-          "timeSlots",
-          "holidays",
-          "clinicAddress",
-          "reviews",
-          "maxPatientsPerDay",
-          "appointments",
-          "uploadedBy",
-          "userId",
-        ],
-      },
-    });
+    const cachedDoctor = await redis.get(`doctor - ${doctorId}`);
 
-    if (!doctor) return next(new ErrorHandler("Error: Doctor not found", 404));
+    if (cachedDoctor) {
+      res.status(200).json({
+        success: true,
+        message: "Doctor Information retrieved",
+        doctor: JSON.parse(cachedDoctor),
+      });
+    } else {
+      const doctor = await Doctor.findOne({
+        where: { id: doctorId },
+        attributes: {
+          exclude: [
+            "securityAnswer",
+            "phone",
+            "altPhone",
+            "hospital",
+            "email",
+            "education",
+            "licenseNumber",
+            "certifications",
+            "availableDays",
+            "timeSlots",
+            "holidays",
+            "clinicAddress",
+            "reviews",
+            "maxPatientsPerDay",
+            "appointments",
+            "uploadedBy",
+            "userId",
+          ],
+        },
+      });
 
-    res
-      .status(200)
-      .json({ success: true, message: "Doctor Information retrieved", doctor });
+      if (!doctor)
+        return next(new ErrorHandler("Error: Doctor not found", 404));
+
+      // save doctor to redis
+      await redis.set(
+        `doctor - ${doctor.id}`,
+        JSON.stringify(doctor),
+        "EX",
+        14 * 24 * 60 * 60 // 14 days
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Doctor Information retrieved",
+        doctor,
+      });
+    }
   }
 );
 
@@ -195,45 +217,64 @@ export const getAllDoctorsList = catchAsyncError(
     const page = parseInt(req.query.page as string, 10) || 1;
     const limit = parseInt(req.query.limit as string, 10) || 4;
     const skip = (page - 1) * limit;
-    const sortOrder = (req.query.sortOrder as string) || "asc";
 
-    // search query
-    const search = req.query.search as string;
+    // queries
+    const { search, specialization, sortBy, available } = req.query;
 
-    const { sortBy, available } = req.query;
-
-    // set WHERE conditions for search query
+    // set WHERE conditions for query
     const where: any = {};
+    // for search by location
     if (search) {
-      const searchTerms = search.trim().split(/\s+/); // Split by spaces
+      const searchTerms =
+        typeof search === "string" ? search.trim().split(/\s+/) : []; // Split by spaces
 
       where[Op.or] = searchTerms.map((term) => ({
         [Op.or]: [
           { city: { [Op.iRegexp]: `\\m${term}\\M` } }, // no case sensitive
-          { specialization: { [Op.iRegexp]: `\\m${term}\\M` } },
+          { state: { [Op.iRegexp]: `\\m${term}\\M` } }, // no case sensitive
         ],
       }));
     }
 
-    if (available) {
+    // for specialization
+    if (specialization) {
+      const specializationQueries =
+        typeof specialization === "string"
+          ? specialization.trim().split(/\s+/)
+          : []; // Split by spaces
+
+      where[Op.or] = specializationQueries.map((query) => ({
+        [Op.or]: [
+          Sequelize.literal(`'${query}' ~* ANY("specialization")`), // for array fields of strings
+        ],
+      }));
+    }
+
+    // for available
+    if (available === "true") {
       where.available = true; // fetch doctors that available
     }
 
     // set ORDER conditions for sorting
     let order: any[] = [];
 
-    if (sortBy === "latest") {
+    // console.log(sortBy);
+
+    if (sortBy === "Latest") {
       order.push(["createdAt", "DESC"]);
-    } else if (sortBy === "oldest") {
+    } else if (sortBy === "Oldest") {
       order.push(["createdAt", "ASC"]);
-    } else if (sortBy === "ratings") {
+    } else if (sortBy === "Ratings") {
       order.push(["ratings", "DESC"]);
     }
 
-    // const totalDoctors = await Doctor.count();
+    // total doctors in the db
+    const grandTotalDoctors = await Doctor.count();
 
+    // total doctors after query
     const totalDoctors = await Doctor.count({ where });
 
+    // exclude vital info
     const doctors = await Doctor.findAll({
       where,
       attributes: {
@@ -248,6 +289,9 @@ export const getAllDoctorsList = catchAsyncError(
           "certifications",
           "availableDays",
           "timeSlots",
+          "thumbnail",
+          "securityQuestion",
+          "workExperience",
           "holidays",
           "clinicAddress",
           "reviews",
@@ -255,6 +299,9 @@ export const getAllDoctorsList = catchAsyncError(
           "appointments",
           "uploadedBy",
           "userId",
+          "createdAt",
+          "updatedAt",
+          "zipCode",
         ],
       },
       offset: skip,
@@ -269,8 +316,10 @@ export const getAllDoctorsList = catchAsyncError(
       message: "Doctors list sent",
       resultsPerPage: doctors.length,
       totalPages: Math.ceil(totalDoctors / limit),
+      results: totalDoctors,
       page,
       doctors,
+      limit,
     });
   }
 );

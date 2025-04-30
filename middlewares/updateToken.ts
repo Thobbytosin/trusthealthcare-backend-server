@@ -12,9 +12,6 @@ export const updateToken = catchAsyncError(
     // fetch the refrsh token from the request cookies
     const { refresh_token } = req.cookies;
 
-    if (!refresh_token)
-      return next(new ErrorHandler("Session has expired: Kindly log in.", 408));
-
     // verify if token is valid
     const decode = jwt.verify(
       refresh_token,

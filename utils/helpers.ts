@@ -9,6 +9,8 @@ export const isPasswordStrong = (password: string) => {
 
   //   console.log("LENGTH:", password.trim().length);
   // check password strength
+  // const hasUpperCase = () => !!password.match(/[a-z]/);
+  // const hasLowerCase = () => !!password.match(/[A-Z]/);
   const hasAlphabet = () => !!password.match(/[a-zA-Z]/);
   const hasNumber = () => !!password.match(/[0-9]/);
 
