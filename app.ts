@@ -37,15 +37,21 @@ app.use(
 // rateLimit middleware
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
-  standardHeaders: "draft-7", // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
-  // store: ... , // Redis, Memcached, etc. See below.
+  limit: 100, // Limit each IP to 100 requests per window
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
 });
 
+// GENERIC - MIDDLEWARES
+// limit requests to server per 15 minutes
+// app.use(limiter);
+
+// check consent on all routes
+app.use(checkCookieConsent);
+
 // ROUTES
-app.use("/api/v1/auth", checkCookieConsent, authRouter);
-app.use("/api/v1/user", checkCookieConsent, userRouter);
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/user", userRouter);
 app.use("/api/v1/doctor", doctorRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/analytics", analyticsRouter);
@@ -63,10 +69,5 @@ app.all("*", (req, res, next) => {
   next(error);
 });
 
-// MIDDLEWARES
-
-// limit requests to server per 15 minutes
-app.use(limiter);
-
-// handle errors middleware on all requests
+// ERROR MIDDLEWARE
 app.use(ErrorMiddleware);

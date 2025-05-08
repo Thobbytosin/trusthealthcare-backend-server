@@ -38,6 +38,13 @@ export const refreshTokenOptions: ITokenOptions = {
   secure: isProduction,
 };
 
+export const hasLoggedInTokenOptions: ITokenOptions = {
+  maxAge: refreshTokenExpiration * 24 * 60 * 60 * 1000, // days
+  httpOnly: false, // client accessible
+  sameSite: isProduction ? "none" : "lax",
+  secure: isProduction,
+};
+
 export const verificationTokenOptions: ITokenOptions = {
   maxAge: 4 * 60 * 1000, // 4 miuntes
   httpOnly: true,
@@ -73,9 +80,15 @@ export const signInWithCredentials = async (
     { expiresIn: `${process.env.REFRESH_TOKEN_EXPIRATION as any}d` || "5d" }
   );
 
+  // accessToken expires in
+  const accessTokenExpiresAt = new Date(
+    Date.now() + accessTokenOptions.maxAge
+  ).getTime();
+
   //   save tokens in the response cookie
   res.cookie("access_token", accessToken, accessTokenOptions);
   res.cookie("refresh_token", refreshToken, refreshTokenOptions);
+  res.cookie("has_logged_in", "true", hasLoggedInTokenOptions);
 
   if (user.signedInAs === "user") {
     await logUserActivity({
@@ -109,5 +122,6 @@ export const signInWithCredentials = async (
     success: true,
     message: "Logged in successfully",
     user,
+    expiresAt: accessTokenExpiresAt,
   });
 };

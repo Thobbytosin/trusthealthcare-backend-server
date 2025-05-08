@@ -2,8 +2,11 @@ import { NextFunction, Request, Response } from "express";
 import catchAsyncError from "./catchAsyncError";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { accessTokenOptions, refreshTokenOptions } from "../utils/token";
-import ErrorHandler from "../utils/errorHandler";
+import {
+  accessTokenOptions,
+  hasLoggedInTokenOptions,
+  refreshTokenOptions,
+} from "../utils/token";
 
 dotenv.config();
 
@@ -43,6 +46,7 @@ export const updateToken = catchAsyncError(
 
     res.cookie("access_token", accessToken, accessTokenOptions);
     res.cookie("refresh_token", refreshToken, refreshTokenOptions);
+    res.cookie("has_logged_in", "true", hasLoggedInTokenOptions);
 
     req.user = user;
     next();

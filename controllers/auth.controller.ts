@@ -14,6 +14,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { sendMail } from "../utils/sendMail";
 import {
+  accessTokenOptions,
   signInWithCredentials,
   verificationTokenOptions,
 } from "../utils/token";
@@ -305,6 +306,7 @@ export const signOut = catchAsyncError(
 
     res.clearCookie("access_token");
     res.clearCookie("refresh_token");
+    res.clearCookie("has_logged_in");
 
     // delete user from db
     await redis.del(`user - ${loggedInUser.id}`);
@@ -336,6 +338,27 @@ export const refreshToken = catchAsyncError(
       });
     }
 
-    res.status(200).json({ success: true, message: "Token Refreshed" });
+    // accessToken expires in
+    const accessTokenExpiresAt = new Date(
+      Date.now() + accessTokenOptions.maxAge
+    ).getTime();
+
+    res.status(200).json({
+      success: true,
+      message: "Token Refreshed",
+      expiresAt: accessTokenExpiresAt,
+    });
+  }
+);
+
+//////////////////////////////////////////////////////////////////////////////////////////////// CLEAR ACCESS TOKEN
+export const clearAccessToken = catchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    res.clearCookie("access_token", accessTokenOptions);
+
+    res.status(200).json({
+      success: true,
+      message: "Session Timeout cleared due to inactivity",
+    });
   }
 );

@@ -16,7 +16,9 @@ export const isUserAuthenticated = catchAsyncError(
 
     // if there is no access token
     if (!access_token)
-      return next(new ErrorHandler("Access Denied: Login to proceed", 403));
+      return next(
+        new ErrorHandler("Session has expired: refresh your browser.", 403)
+      );
 
     // verify access token
     const decodeAccess: any = jwt.verify(

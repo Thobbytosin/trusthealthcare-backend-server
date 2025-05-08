@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   accountVerification,
+  clearAccessToken,
   loginUser,
   refreshToken,
   registerUser,
@@ -29,5 +30,8 @@ authRouter.post("/signout", isUserAuthenticated, signOut);
 
 // REFRESH TOKEN
 authRouter.get("/refresh-tokens", updateToken, refreshToken);
+
+// REFRESH TOKEN
+authRouter.get("/clear-access-token", clearAccessToken);
 
 export default authRouter;

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import catchAsyncError from "../middlewares/catchAsyncError";
 import ErrorHandler from "../utils/errorHandler";
 import { uploadToCloudinary } from "../utils/cloudinary";
-import { Doctor } from "../models/doctor.model";
+import { Doctor, IDoctor } from "../models/doctor.model";
 import { Op } from "sequelize";
 import { User } from "../models/user.model";
 import { signOut } from "./auth.controller";
@@ -166,7 +166,7 @@ export const getDoctor = catchAsyncError(
         doctor: JSON.parse(cachedDoctor),
       });
     } else {
-      const doctor = await Doctor.findOne({
+      const doctor: IDoctor | null = await Doctor.findOne({
         where: { id: doctorId },
         attributes: {
           exclude: [
@@ -219,7 +219,7 @@ export const getAllDoctorsList = catchAsyncError(
     const skip = (page - 1) * limit;
 
     // queries
-    const { search, specialization, sortBy, available } = req.query;
+    const { search, specialization, sortBy, filter } = req.query;
 
     // set WHERE conditions for query
     const where: any = {};
@@ -251,20 +251,18 @@ export const getAllDoctorsList = catchAsyncError(
     }
 
     // for available
-    if (available === "true") {
+    if (filter === "available") {
       where.available = true; // fetch doctors that available
     }
 
     // set ORDER conditions for sorting
     let order: any[] = [];
 
-    // console.log(sortBy);
-
-    if (sortBy === "Latest") {
+    if (sortBy === "latest") {
       order.push(["createdAt", "DESC"]);
-    } else if (sortBy === "Oldest") {
+    } else if (sortBy === "oldest") {
       order.push(["createdAt", "ASC"]);
-    } else if (sortBy === "Ratings") {
+    } else if (sortBy === "ratings") {
       order.push(["ratings", "DESC"]);
     }
 
