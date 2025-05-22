@@ -24,7 +24,7 @@ const ErrorMiddleware = (
   }
 
   if (err.name === "JsonWebTokenError") {
-    const message = "Token has expired. Kindly login.";
+    const message = "Session has expired. Kindly login.";
     err = new ErrorHandler(message, 400);
   }
 

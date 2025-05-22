@@ -48,7 +48,7 @@ adminRouter.get(
 
 // APPLICATION ACCEPTED
 adminRouter.put(
-  "/application-success/:userId",
+  "/application-success/:doctor_id",
   isUserAuthenticated,
   authorizeRoleAdmin("admin"),
   doctorApplicationApproval
@@ -56,7 +56,7 @@ adminRouter.put(
 
 // APPLICATION DENIED
 adminRouter.put(
-  "/application-failed/:userId",
+  "/application-failed/:doctor_id",
   isUserAuthenticated,
   authorizeRoleAdmin("admin"),
   doctorApplicationDenial

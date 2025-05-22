@@ -10,7 +10,7 @@ import {
 import { Appointment } from "./appointment.model";
 import { User } from "./user.model";
 
-export interface IDoctor {
+export type IDoctor = {
   id: string;
   name: string;
   email: string;
@@ -19,9 +19,8 @@ export interface IDoctor {
   specialization: string[];
   workExperience: { hospital: string; role: string; duration: string }[];
   yearsOfExperience: number;
-  education: string[];
-  hospital: string;
-  clinicAddress: string;
+  education: { institution: string; graduationYear: string; course: string }[];
+  hospital: { name: string; address: string }[];
   licenseNumber: string;
   certifications: string[];
   availableDays: string[];
@@ -40,10 +39,10 @@ export interface IDoctor {
   thumbnail: { id: string; url: string };
   image: string;
   verificationStatus: "Processing" | "Verified" | "Failed";
-  uploadedBy: "user" | "admin";
-  userId: string;
+  uploadedBy: "doctor" | "admin";
+  uploadedById: string;
   available: boolean;
-}
+};
 
 interface Review {
   patientId: number;
@@ -66,7 +65,7 @@ interface Review {
   },
   timestamps: true,
 })
-export class Doctor extends Model {
+export class Doctor extends Model<IDoctor> implements IDoctor {
   @Default(DataType.UUIDV4)
   @Column({
     type: DataType.UUID,
@@ -128,22 +127,27 @@ export class Doctor extends Model {
   ];
 
   @Column({
-    type: DataType.ARRAY(DataType.STRING),
-    allowNull: false,
+    type: DataType.JSONB,
+    allowNull: true,
   })
-  education!: string[];
+  education!: [
+    {
+      institution: string;
+      graduationYear: string;
+      course: string;
+    }
+  ];
 
   @Column({
-    type: DataType.STRING,
-    allowNull: false,
+    type: DataType.JSONB,
+    allowNull: true,
   })
-  hospital!: string;
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-  })
-  clinicAddress!: string;
+  hospital!: [
+    {
+      name: string;
+      address: string;
+    }
+  ];
 
   @Column({
     type: DataType.STRING,
@@ -254,14 +258,14 @@ export class Doctor extends Model {
     type: DataType.ENUM("user", "admin"),
     allowNull: false,
   })
-  uploadedBy!: "user" | "admin";
+  uploadedBy!: "doctor" | "admin";
 
   @ForeignKey(() => User)
   @Column({
     type: DataType.UUID,
     allowNull: false,
   })
-  userId!: string;
+  uploadedById!: string;
 
   @Column({
     type: DataType.BOOLEAN,
@@ -270,58 +274,3 @@ export class Doctor extends Model {
   })
   available!: boolean;
 }
-
-// import mongoose, { Document, Model, Schema } from "mongoose";
-
-// const doctorSchema: Schema<IDoctor> = new mongoose.Schema(
-//   {
-//     name: { type: String, required: true },
-//     email: { type: String, required: true, unique: true },
-//     securityAnswer: { type: String, required: true, select: false },
-//     hospital: { type: String, required: true },
-//     specialization: { type: String, required: true },
-//     experience: { type: String, required: true },
-//     education: [{ type: String, required: true }],
-//     licenseNumber: { type: String, required: true },
-//     certifications: [{ type: String }],
-//     availableDays: [{ type: String, required: true }],
-//     timeSlots: [{ type: String, required: true }],
-//     holidays: [{ type: Date }],
-//     clinicAddress: { type: String, required: true },
-//     city: { type: String, required: true },
-//     state: { type: String, required: true },
-//     zipCode: { type: Number, required: true },
-//     phone: { type: Number, required: true },
-//     altPhone: { type: String },
-//     ratings: { type: Number, default: 0 },
-//     reviews: [
-//       {
-//         patientId: { type: mongoose.Schema.Types.ObjectId, ref: "Patient" },
-//         comment: { type: String },
-//         rating: { type: Number },
-//         date: { type: Date, default: Date.now },
-//       },
-//     ],
-//     appointments: [
-//       { type: mongoose.Schema.Types.ObjectId, ref: "Appointment" },
-//     ],
-//     maxPatientsPerDay: { type: Number, required: true },
-//     about: { type: String },
-//     thumbnail: {
-//       id: {
-//         type: String,
-//       },
-//       url: { type: String },
-//     },
-//     verificationStatus: {
-//       type: String,
-//       enum: ["Processing", "Verified", "Failed", "Completed"],
-//       default: "Processing",
-//     },
-//   },
-//   { timestamps: true }
-// );
-
-// const Doctor: Model<IDoctor> = mongoose.model("Doctor", doctorSchema);
-
-// export default Doctor;

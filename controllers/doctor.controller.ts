@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import catchAsyncError from "../middlewares/catchAsyncError";
 import ErrorHandler from "../utils/errorHandler";
 import { uploadToCloudinary } from "../utils/cloudinary";
-import { Doctor } from "../models/doctor.model";
+import { Doctor, IDoctor } from "../models/doctor.model";
 import { Op } from "sequelize";
 import { User } from "../models/user.model";
 import { signOut } from "./auth.controller";
@@ -76,13 +76,13 @@ export const uploadDoctor = catchAsyncError(
       doctor = await Doctor.create({
         ...data,
         uploadedBy: "admin",
-        userId: loggedInUser.id,
+        uploadedById: loggedInUser.id,
       });
     } else {
       doctor = await Doctor.create({
         ...data,
-        uploadedBy: "user",
-        userId: loggedInUser.id,
+        uploadedBy: "doctor",
+        uploadedById: loggedInUser.id,
       });
     }
 
@@ -109,41 +109,46 @@ export const uploadDoctor = catchAsyncError(
 export const updateDoctor = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const data = req.body; // edited fields
-    const { thumbnail } = req.files; // images
+    // const { thumbnail } = req.files; // images
     const doctor = req.doctor;
 
+    // HANDLE DOCTOR PICURE UPDATE ON A DIFFERENT ROUTE
     // upload data image to cloudinary server
 
-    if (thumbnail) {
-      const folderPath = `trusthealthcare/doctors/${data.name}`;
+    // if (thumbnail) {
+    //   const folderPath = `trusthealthcare/doctors/${data.name}`;
 
-      // for cloudinary upload
-      try {
-        const { thumbnailId, thumbnailUrl } = await uploadToCloudinary(
-          thumbnail,
-          folderPath
-        );
+    //   // for cloudinary upload
+    //   try {
+    //     const { thumbnailId, thumbnailUrl } = await uploadToCloudinary(
+    //       thumbnail,
+    //       folderPath
+    //     );
 
-        data.thumbnail = {
-          id: thumbnailId,
-          url: thumbnailUrl,
-        };
-      } catch (error: any) {
-        return res
-          .status(400)
-          .json({ success: false, message: error.message || "Upload Failed" });
-      }
-    }
+    //     data.thumbnail = {
+    //       id: thumbnailId,
+    //       url: thumbnailUrl,
+    //     };
+    //   } catch (error: any) {
+    //     return res
+    //       .status(400)
+    //       .json({ success: false, message: error.message || "Upload Failed" });
+    //   }
+    // }
 
     // update doctor credentials
-
     const newDoctor = await Doctor.update(
       { ...data },
       { where: { id: doctor.id } }
     );
 
     if (!newDoctor)
-      return next(new ErrorHandler("Error updating credntials", 400));
+      return next(
+        new ErrorHandler(
+          "Error updating credntials: You can only update your account",
+          400
+        )
+      );
 
     res.status(201).json({
       success: true,
@@ -156,8 +161,8 @@ export const updateDoctor = catchAsyncError(
 export const getDoctor = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const doctorId = req.params.doctor_id;
-
-    const cachedDoctor = await redis.get(`doctor - ${doctorId}`);
+    // const cachedDoctor = await redis.get(`doctor - ${doctorId}`);
+    const cachedDoctor = false;
 
     if (cachedDoctor) {
       res.status(200).json({
@@ -166,24 +171,24 @@ export const getDoctor = catchAsyncError(
         doctor: JSON.parse(cachedDoctor),
       });
     } else {
-      const doctor = await Doctor.findOne({
+      const doctor: IDoctor | null = await Doctor.findOne({
         where: { id: doctorId },
         attributes: {
           exclude: [
             "securityAnswer",
+            "securityQuestion",
             "phone",
             "altPhone",
             "hospital",
-            "email",
-            "education",
+            "thumbnail",
+            "zipCode",
+            "createdAt",
+            "updatedAt",
             "licenseNumber",
-            "certifications",
-            "availableDays",
-            "timeSlots",
+            "email",
             "holidays",
             "clinicAddress",
             "reviews",
-            "maxPatientsPerDay",
             "appointments",
             "uploadedBy",
             "userId",
@@ -219,7 +224,7 @@ export const getAllDoctorsList = catchAsyncError(
     const skip = (page - 1) * limit;
 
     // queries
-    const { search, specialization, sortBy, available } = req.query;
+    const { search, specialization, sortBy, filter, location } = req.query;
 
     // set WHERE conditions for query
     const where: any = {};
@@ -230,6 +235,20 @@ export const getAllDoctorsList = catchAsyncError(
 
       where[Op.or] = searchTerms.map((term) => ({
         [Op.or]: [
+          { city: { [Op.iRegexp]: `\\m${term}\\M` } }, // no case sensitive
+          { state: { [Op.iRegexp]: `\\m${term}\\M` } }, // no case sensitive
+        ],
+      }));
+    }
+
+    // search by user location
+    if (location) {
+      const searchTerms =
+        typeof location === "string" ? location.trim().split(/\s+/) : []; // Split by spaces
+
+      where[Op.or] = searchTerms.map((term) => ({
+        [Op.or]: [
+          { clinicAddress: { [Op.iRegexp]: `\\m${term}\\M` } }, // no case sensitive
           { city: { [Op.iRegexp]: `\\m${term}\\M` } }, // no case sensitive
           { state: { [Op.iRegexp]: `\\m${term}\\M` } }, // no case sensitive
         ],
@@ -251,20 +270,18 @@ export const getAllDoctorsList = catchAsyncError(
     }
 
     // for available
-    if (available === "true") {
+    if (filter === "available") {
       where.available = true; // fetch doctors that available
     }
 
     // set ORDER conditions for sorting
     let order: any[] = [];
 
-    // console.log(sortBy);
-
-    if (sortBy === "Latest") {
+    if (sortBy === "latest") {
       order.push(["createdAt", "DESC"]);
-    } else if (sortBy === "Oldest") {
+    } else if (sortBy === "oldest") {
       order.push(["createdAt", "ASC"]);
-    } else if (sortBy === "Ratings") {
+    } else if (sortBy === "ratings") {
       order.push(["ratings", "DESC"]);
     }
 
@@ -370,3 +387,7 @@ export const getSomeDoctorsUnauthenticated = catchAsyncError(
     });
   }
 );
+
+// [{"institution": "University of Lagos, Nigeria", "graduationYear": "2013", "course": "MBBS"},{"institution":  "Johns Hopkins School of Medicine, USA", "graduationYear": "2017", "course": "MD"}]
+
+// [{"name": "Evergreen Skin & Laser Clinic","address": "27 Ologun Agbaje Street, Victoria Island"}]

@@ -18,7 +18,6 @@ const requireFields: (keyof IDoctor)[] = [
   "certifications",
   "availableDays",
   "timeSlots",
-  "clinicAddress",
   "city",
   "state",
   "zipCode",
@@ -57,11 +56,28 @@ export const validateDoctorData = catchAsyncError(
       );
     }
 
-    // check if doctor  uploaded an image
-    if (thumbnail === null || thumbnail === undefined)
-      return next(
-        new ErrorHandler("Permission Denied: Doctor MUST have an image", 403)
-      );
+    if (req.method === "POST") {
+      // check if doctor  uploaded an image
+      if (thumbnail === null || thumbnail === undefined)
+        return next(
+          new ErrorHandler("Permission Denied: Doctor MUST have an image", 403)
+        );
+
+      // check if user is uploading more than 1 image
+      if (Array.isArray(thumbnail))
+        return next(new ErrorHandler("Multiple images not allowed", 403));
+
+      if (
+        thumbnail.mimetype?.startsWith("image/svg") ||
+        !thumbnail.mimetype?.startsWith("image")
+      )
+        return next(
+          new ErrorHandler(
+            "Invalid image format. File must be an image(.jpg, .png, .jpeg)",
+            403
+          )
+        );
+    }
 
     // ensure some fields are array
     const ensureArray = (value: any) => {
@@ -70,8 +86,6 @@ export const validateDoctorData = catchAsyncError(
       return [];
     };
 
-    // console.log(data);
-
     const formattedData = {
       ...data,
       city: data.city.toLowerCase(),
@@ -79,6 +93,7 @@ export const validateDoctorData = catchAsyncError(
       certifications: ensureArray(data.certifications),
       availableDays: ensureArray(data.availableDays),
       workExperience: ensureArray(data.workExperience),
+      hospital: ensureArray(data.hospital),
       specialization: ensureArray(data.specialization),
       timeSlots: data.availableDays?.reduce(
         (acc: Record<string, any>, day: string) => {
@@ -88,21 +103,6 @@ export const validateDoctorData = catchAsyncError(
         {}
       ),
     };
-
-    // check if user is uploading more than 1 image
-    if (Array.isArray(thumbnail))
-      return next(new ErrorHandler("Multiple images not allowed", 403));
-
-    if (
-      thumbnail.mimetype?.startsWith("image/svg") ||
-      !thumbnail.mimetype?.startsWith("image")
-    )
-      return next(
-        new ErrorHandler(
-          "Invalid image format. File must be an image(.jpg, .png, .jpeg)",
-          403
-        )
-      );
 
     req.body = formattedData;
     next();
