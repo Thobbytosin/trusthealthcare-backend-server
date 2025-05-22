@@ -8,14 +8,9 @@ export const formParser = async (
 ) => {
   const form = formidable({ multiples: true });
 
-  const arrayFields = [
-    "availableDays",
-    "certifications",
-    "education",
-    "specialization",
-  ];
+  const arrayFields = ["availableDays", "certifications", "specialization"];
 
-  const jsonFields = ["workExperience", "timeSlots"];
+  const jsonFields = ["workExperience", "timeSlots", "education", "hospital"];
 
   const [fields, files] = await form.parse(req as any);
 
@@ -33,7 +28,12 @@ export const formParser = async (
       req.body[key] = value;
     } else if (jsonFields.includes(key)) {
       try {
-        req.body[key] = JSON.parse(value![0]);
+        const cleanedJson = value![0]
+          // .replace(/[\n\s]/g, "") // Strip whitespace
+          .replace(/^\[|];?$/g, ""); // remove semicolons/brackets
+
+        req.body[key] = JSON.parse(`[${cleanedJson}]`);
+        // req.body[key] = JSON.parse(value![0]);
       } catch (e) {
         req.body[key] = value![0];
       }

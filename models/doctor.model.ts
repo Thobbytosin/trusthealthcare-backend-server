@@ -19,9 +19,8 @@ export type IDoctor = {
   specialization: string[];
   workExperience: { hospital: string; role: string; duration: string }[];
   yearsOfExperience: number;
-  education: string[];
-  hospital: string;
-  clinicAddress: string;
+  education: { institution: string; graduationYear: string; course: string }[];
+  hospital: { name: string; address: string }[];
   licenseNumber: string;
   certifications: string[];
   availableDays: string[];
@@ -40,8 +39,8 @@ export type IDoctor = {
   thumbnail: { id: string; url: string };
   image: string;
   verificationStatus: "Processing" | "Verified" | "Failed";
-  uploadedBy: "user" | "admin";
-  userId: string;
+  uploadedBy: "doctor" | "admin";
+  uploadedById: string;
   available: boolean;
 };
 
@@ -128,22 +127,27 @@ export class Doctor extends Model<IDoctor> implements IDoctor {
   ];
 
   @Column({
-    type: DataType.ARRAY(DataType.STRING),
-    allowNull: false,
+    type: DataType.JSONB,
+    allowNull: true,
   })
-  education!: string[];
+  education!: [
+    {
+      institution: string;
+      graduationYear: string;
+      course: string;
+    }
+  ];
 
   @Column({
-    type: DataType.STRING,
-    allowNull: false,
+    type: DataType.JSONB,
+    allowNull: true,
   })
-  hospital!: string;
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-  })
-  clinicAddress!: string;
+  hospital!: [
+    {
+      name: string;
+      address: string;
+    }
+  ];
 
   @Column({
     type: DataType.STRING,
@@ -254,14 +258,14 @@ export class Doctor extends Model<IDoctor> implements IDoctor {
     type: DataType.ENUM("user", "admin"),
     allowNull: false,
   })
-  uploadedBy!: "user" | "admin";
+  uploadedBy!: "doctor" | "admin";
 
   @ForeignKey(() => User)
   @Column({
     type: DataType.UUID,
     allowNull: false,
   })
-  userId!: string;
+  uploadedById!: string;
 
   @Column({
     type: DataType.BOOLEAN,

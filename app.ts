@@ -34,6 +34,11 @@ app.use(
   })
 );
 
+// Health check route above the middlewares
+app.get("/api/v1/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 // rateLimit middleware
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -44,7 +49,7 @@ const limiter = rateLimit({
 
 // GENERIC - MIDDLEWARES
 // limit requests to server per 15 minutes
-// app.use(limiter);
+app.use(limiter);
 
 // check consent on all routes
 app.use(checkCookieConsent);
@@ -56,11 +61,6 @@ app.use("/api/v1/doctor", doctorRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/analytics", analyticsRouter);
 app.use("/api/v1/suggestion", suggestionRouter);
-
-// test api
-app.get("/test", async (req, res) => {
-  res.send({ message: "API IS WORKING" });
-});
 
 // unknown route
 app.all("*", (req, res, next) => {

@@ -6,7 +6,7 @@ export const authorizeUpload = (...allowedrole: string[]) => {
     if (!req.user?.role.some((role: string) => allowedrole.includes(role))) {
       return next(
         new ErrorHandler(
-          `Permission Denied: You must have an account to submit your application as a doctor.`,
+          `Permission Denied: You must have an account to submit your application as a doctor or update your profile.`,
           403
         )
       );

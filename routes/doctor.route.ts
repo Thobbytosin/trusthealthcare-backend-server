@@ -13,7 +13,6 @@ import {
 } from "../controllers/doctor.controller";
 import { validateDoctorData } from "../middlewares/validatedoctorData";
 import { formParser } from "../middlewares/formParser";
-import { checkCookieConsent } from "../middlewares/cookie-consent";
 
 const doctorRouter = Router();
 
@@ -38,7 +37,6 @@ doctorRouter.put(
   "/update-doctor/:doctor_id",
   isUserAuthenticated,
   hasDoctorProfileBeenUpdatedLast7days,
-  authorizeUpload("admin", "doctor"),
   formParser,
   validateDoctorData,
   updateDoctor

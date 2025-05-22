@@ -354,7 +354,7 @@ export const refreshToken = catchAsyncError(
 //////////////////////////////////////////////////////////////////////////////////////////////// CLEAR ACCESS TOKEN
 export const clearAccessToken = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    res.clearCookie("access_token", accessTokenOptions);
+    res.clearCookie("access_token");
 
     res.status(200).json({
       success: true,

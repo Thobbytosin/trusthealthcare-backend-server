@@ -8,16 +8,16 @@ import { logDoctorActivity } from "../utils/helpers";
 //////////////////////////////////////////////////////////////////////////////////////////////// DELETE USER ACCOUNT (ADMIN)
 export const deleteUser = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { userId } = req.params;
+    const { doctorId } = req.params;
     const loggedInUser = req.user;
 
-    if (!userId) return next(new ErrorHandler("User Id not found", 400));
+    if (!doctorId) return next(new ErrorHandler("User Id not found", 400));
 
-    const user = await User.findByPk(userId);
+    const user = await User.findByPk(doctorId);
 
     if (!user) return next(new ErrorHandler("User Account not found", 404));
 
-    if (loggedInUser.id === userId)
+    if (loggedInUser.id === doctorId)
       return next(
         new ErrorHandler(
           "Permission Restricted: You can not delete your account",
@@ -79,10 +79,11 @@ export const getDoctorAdmin = catchAsyncError(
 ////////////////////////////////////////////////////////////////////////////////////////////////  APPLICATION APPROVAL (ADMIN)
 export const doctorApplicationApproval = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+    const doctorId = req.params.doctor_id;
 
-    const user = await User.findByPk(userId);
-    const doctor = await Doctor.findOne({ where: { userId } });
+    const user = await User.findByPk(doctorId);
+
+    const doctor = await Doctor.findOne({ where: { uploadedById: doctorId } });
 
     if (!user || !doctor)
       return next(new ErrorHandler("User/Doctor not found", 404));
@@ -122,9 +123,9 @@ export const doctorApplicationApproval = catchAsyncError(
 ////////////////////////////////////////////////////////////////////////////////////////////////  APPLICATION DENIAL (ADMIN)
 export const doctorApplicationDenial = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+    const doctorId = req.params.doctor_id;
 
-    const doctor = await Doctor.findOne({ where: { userId } });
+    const doctor = await Doctor.findOne({ where: { uploadedById: doctorId } });
 
     if (!doctor) return next(new ErrorHandler("Doctor not found", 404));
 
