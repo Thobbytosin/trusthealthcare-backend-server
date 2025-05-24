@@ -46,3 +46,7 @@ doctorRouter.put(
 doctorRouter.get("/get-doctor/:doctor_id", isUserAuthenticated, getDoctor);
 
 export default doctorRouter;
+
+// [{"institution": "University of Edinburgh, Scotland", "graduationYear": "2011", "course": "MBBS"},{"institution":  "Queen Charlotte's Hospital", "graduationYear": "2015", "course": "Specialist Training in Obstetrics and Gynecology"}]
+
+// [{"name": "Harley Women's Health Clinic","address": "22 Fitzroy Square, London"}]

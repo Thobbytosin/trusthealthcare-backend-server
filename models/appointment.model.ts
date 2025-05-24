@@ -76,6 +76,12 @@ export class Appointment extends Model {
   appointmentDate!: Date;
 
   @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  slot!: string;
+
+  @Column({
     type: DataType.DATE,
     allowNull: false,
     validate: {
@@ -105,13 +111,6 @@ export class Appointment extends Model {
     allowNull: false,
   })
   status!: AppointmentStatus;
-
-  // @Column({
-  //   type: DataType.ENUM("Pending", "Confirmed", "Cancelled", "Completed"),
-  //   defaultValue: "Pending",
-  //   allowNull: false,
-  // })
-  // status!: "Pending" | "Confirmed" | "Cancelled" | "Completed";
 
   @Column({
     type: DataType.ENUM(...Object.values(AppointmentType)),

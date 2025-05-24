@@ -90,9 +90,7 @@ export const hasDoctorProfileBeenUpdatedLast7days = catchAsyncError(
         )
       );
 
-    const doctor = await Doctor.findOne({
-      where: { id: doctorId },
-    });
+    const doctor = await Doctor.findByPk(doctorId);
 
     // check if doctor exists
     if (!doctor) return next(new ErrorHandler("Account does not exist", 404));

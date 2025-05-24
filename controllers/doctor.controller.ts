@@ -9,6 +9,7 @@ import { signOut } from "./auth.controller";
 import { logDoctorActivity } from "../utils/helpers";
 import { Sequelize } from "sequelize-typescript";
 import redis from "../utils/redis";
+import { name } from "ejs";
 
 //////////////////////////////////////////////////////////////////////////////////////////////// UPLOAD DOCTOR
 export const uploadDoctor = catchAsyncError(
@@ -97,6 +98,37 @@ export const uploadDoctor = catchAsyncError(
       next,
     });
 
+    const updatedDoctor = {
+      id: doctor?.id,
+      name: doctor?.name,
+      email: doctor?.email,
+      specialization: doctor?.specialization,
+      workExperience: doctor?.workExperience,
+      yearsOfExperience: doctor?.yearsOfExperience,
+      education: doctor?.education,
+      hospital: doctor?.hospital,
+      certifications: doctor?.certifications,
+      availableDays: doctor?.availableDays,
+      timeSlots: doctor?.timeSlots,
+      city: doctor?.city,
+      state: doctor?.state,
+      ratings: doctor?.ratings,
+      reviews: doctor?.reviews,
+      maxPatientsPerDay: doctor?.maxPatientsPerDay,
+      about: doctor?.about,
+      image: doctor?.image,
+      verificationStatus: doctor?.verificationStatus,
+      available: doctor?.available,
+    };
+
+    // save doctor to redis
+    await redis.set(
+      `doctor - ${doctor.id}`,
+      JSON.stringify(updatedDoctor),
+      "EX",
+      14 * 24 * 60 * 60 // 14 days
+    );
+
     res.status(201).json({
       success: true,
       message:
@@ -109,46 +141,41 @@ export const uploadDoctor = catchAsyncError(
 export const updateDoctor = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const data = req.body; // edited fields
-    // const { thumbnail } = req.files; // images
-    const doctor = req.doctor;
+    const doctorId = req.doctor.id;
+    const doctor = await Doctor.findByPk(doctorId);
 
-    // HANDLE DOCTOR PICURE UPDATE ON A DIFFERENT ROUTE
-    // upload data image to cloudinary server
+    await doctor?.update({ ...data });
 
-    // if (thumbnail) {
-    //   const folderPath = `trusthealthcare/doctors/${data.name}`;
+    const updatedDoctor = {
+      id: doctor?.id,
+      name: doctor?.name,
+      email: doctor?.email,
+      specialization: doctor?.specialization,
+      workExperience: doctor?.workExperience,
+      yearsOfExperience: doctor?.yearsOfExperience,
+      education: doctor?.education,
+      hospital: doctor?.hospital,
+      certifications: doctor?.certifications,
+      availableDays: doctor?.availableDays,
+      timeSlots: doctor?.timeSlots,
+      city: doctor?.city,
+      state: doctor?.state,
+      ratings: doctor?.ratings,
+      reviews: doctor?.reviews,
+      maxPatientsPerDay: doctor?.maxPatientsPerDay,
+      about: doctor?.about,
+      image: doctor?.image,
+      verificationStatus: doctor?.verificationStatus,
+      available: doctor?.available,
+    };
 
-    //   // for cloudinary upload
-    //   try {
-    //     const { thumbnailId, thumbnailUrl } = await uploadToCloudinary(
-    //       thumbnail,
-    //       folderPath
-    //     );
-
-    //     data.thumbnail = {
-    //       id: thumbnailId,
-    //       url: thumbnailUrl,
-    //     };
-    //   } catch (error: any) {
-    //     return res
-    //       .status(400)
-    //       .json({ success: false, message: error.message || "Upload Failed" });
-    //   }
-    // }
-
-    // update doctor credentials
-    const newDoctor = await Doctor.update(
-      { ...data },
-      { where: { id: doctor.id } }
+    // save doctor to redis
+    await redis.set(
+      `doctor - ${updatedDoctor.id}`,
+      JSON.stringify(updatedDoctor),
+      "EX",
+      14 * 24 * 60 * 60 // 14 days
     );
-
-    if (!newDoctor)
-      return next(
-        new ErrorHandler(
-          "Error updating credntials: You can only update your account",
-          400
-        )
-      );
 
     res.status(201).json({
       success: true,
@@ -161,8 +188,8 @@ export const updateDoctor = catchAsyncError(
 export const getDoctor = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const doctorId = req.params.doctor_id;
-    // const cachedDoctor = await redis.get(`doctor - ${doctorId}`);
-    const cachedDoctor = false;
+    const cachedDoctor = await redis.get(`doctor - ${doctorId}`);
+    // const cachedDoctor = false;
 
     if (cachedDoctor) {
       res.status(200).json({
@@ -185,10 +212,7 @@ export const getDoctor = catchAsyncError(
             "createdAt",
             "updatedAt",
             "licenseNumber",
-            "email",
             "holidays",
-            "clinicAddress",
-            "reviews",
             "appointments",
             "uploadedBy",
             "userId",
@@ -359,7 +383,6 @@ export const getSomeDoctorsUnauthenticated = catchAsyncError(
           "timeSlots",
           "appointments",
           "holidays",
-          "clinicAddress",
           "reviews",
           "maxPatientsPerDay",
           "city",
