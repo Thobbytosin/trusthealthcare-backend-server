@@ -3,12 +3,20 @@ import {
   DataType,
   Default,
   ForeignKey,
-  HasMany,
   Model,
   Table,
 } from "sequelize-typescript";
-import { Appointment } from "./appointment.model";
 import { User } from "./user.model";
+
+export type DoctorAppointment = {
+  patient: { name: string };
+  title: string;
+  dateOfAppointment: Date;
+  appointmentDuration: string;
+  appointmentType: string;
+  appointmentStatus: string;
+  extraNotes?: string;
+};
 
 export type IDoctor = {
   id: string;
@@ -33,7 +41,7 @@ export type IDoctor = {
   altPhone?: string;
   ratings?: number;
   reviews?: Review[];
-  appointments?: Appointment[];
+  appointments?: DoctorAppointment[];
   maxPatientsPerDay: number;
   about: string;
   thumbnail: { id: string; url: string };
@@ -218,8 +226,10 @@ export class Doctor extends Model<IDoctor> implements IDoctor {
   })
   reviews?: Review[];
 
-  @HasMany(() => Appointment)
-  appointments?: Appointment[];
+  @Column({
+    type: DataType.ARRAY(DataType.JSONB),
+  })
+  appointments?: DoctorAppointment[];
 
   @Column({
     type: DataType.INTEGER,
