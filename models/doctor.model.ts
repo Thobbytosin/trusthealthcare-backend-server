@@ -3,11 +3,9 @@ import {
   DataType,
   Default,
   ForeignKey,
-  HasMany,
   Model,
   Table,
 } from "sequelize-typescript";
-import { Appointment } from "./appointment.model";
 import { User } from "./user.model";
 
 export type DoctorAppointment = {
