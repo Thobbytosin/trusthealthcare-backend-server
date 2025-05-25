@@ -7,11 +7,12 @@ const ErrorMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  // console.log("ERROR MESSAGE:", err.message);
-
-  err.statusCode = err.statusCode || 500;
-  err.message = err.message || "Internal Server Error";
-  err.name = err.name || "Server Error";
+  err.statusCode = typeof err === "object" ? err.statusCode || 500 : 500;
+  err.message =
+    typeof err === "object"
+      ? err.message || "Internal Server Error"
+      : String(err);
+  err.name = typeof err === "object" ? err.name || "Server Error" : String(err);
 
   if (err.name === "TokenExpiredError" || err.message === "jwt expired") {
     const message = "Session has ended. Kindly Login to access this.";
@@ -32,11 +33,6 @@ const ErrorMiddleware = (
     const message = "All doctor parameters must be entered";
     err = new ErrorHandler(message, 400);
   }
-
-  // if (err.message.startsWith("invalid input syntax for type")) {
-  //   const message = "Invalid Input: Your input cannot be processed";
-  //   err = new ErrorHandler(message, 422);
-  // }
 
   res.status(err.statusCode).json({ success: false, message: err.message });
 };

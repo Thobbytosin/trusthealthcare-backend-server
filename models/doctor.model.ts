@@ -32,7 +32,13 @@ export type IDoctor = {
   licenseNumber: string;
   certifications: string[];
   availableDays: string[];
-  timeSlots: { [key: string]: string[] };
+  timeSlots: {
+    [key: string]: {
+      label: "Morning" | "Afternoon" | "Evening";
+      start: string;
+      end: string;
+    }[];
+  };
   holidays?: Date[];
   city: string;
   state: string;
@@ -179,7 +185,13 @@ export class Doctor extends Model<IDoctor> implements IDoctor {
     type: DataType.JSONB,
     allowNull: false,
   })
-  timeSlots!: { [key: string]: string[] };
+  timeSlots!: {
+    [key: string]: {
+      label: "Morning" | "Afternoon" | "Evening";
+      start: string;
+      end: string;
+    }[];
+  };
 
   @Column({
     type: DataType.ARRAY(DataType.DATE),
