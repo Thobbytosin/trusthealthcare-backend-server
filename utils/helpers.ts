@@ -3,14 +3,13 @@ import ErrorHandler from "./errorHandler";
 import { UserActivityLogs } from "../models/userActivity.model";
 import { NextFunction } from "express";
 import { DoctorActivityLogs } from "../models/doctorActivity.model";
+import { addMinutes, format, isBefore, parse } from "date-fns";
 
-export const isPasswordStrong = (password: string) => {
+export const isEmailValid: RegExp =
+  /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+export function isPasswordStrong(password: string) {
   const passwordLength = password.trim().length;
-
-  //   console.log("LENGTH:", password.trim().length);
-  // check password strength
-  // const hasUpperCase = () => !!password.match(/[a-z]/);
-  // const hasLowerCase = () => !!password.match(/[A-Z]/);
   const hasAlphabet = () => !!password.match(/[a-zA-Z]/);
   const hasNumber = () => !!password.match(/[0-9]/);
 
@@ -19,12 +18,9 @@ export const isPasswordStrong = (password: string) => {
     hasNumber() && hasAlphabet() && passwordLength >= 8;
 
   return passwordIsArbitrarilyStrongEnough;
-};
+}
 
-export const isEmailValid: RegExp =
-  /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-export const createVerificationToken = (user: any) => {
+export function createVerificationToken(user: any) {
   const verificationCode = Math.floor(
     100000 + Math.random() * 900000
   ).toString(); // generates random 6 digit code
@@ -36,9 +32,9 @@ export const createVerificationToken = (user: any) => {
   );
 
   return { verificationCode, verificationToken };
-};
+}
 
-export const createResetPasswordToken = (user: any) => {
+export function createResetPasswordToken(user: any) {
   const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
 
   const resetToken = jwt.sign(
@@ -48,7 +44,7 @@ export const createResetPasswordToken = (user: any) => {
   );
 
   return { resetCode, resetToken };
-};
+}
 
 export function add(a: number, b: number) {
   const answer = a + b;
@@ -56,7 +52,7 @@ export function add(a: number, b: number) {
   return answer;
 }
 
-export const logUserActivity = async ({
+export async function logUserActivity({
   userId,
   action,
   ipAddress,
@@ -68,7 +64,7 @@ export const logUserActivity = async ({
   ipAddress?: string;
   userAgent?: string;
   next: NextFunction;
-}) => {
+}) {
   try {
     if (action !== "Token Refreshed") {
       return await UserActivityLogs.create({
@@ -103,9 +99,9 @@ export const logUserActivity = async ({
   } catch (err: any) {
     return next(new ErrorHandler(err.message, 400));
   }
-};
+}
 
-export const logDoctorActivity = async ({
+export async function logDoctorActivity({
   doctorId,
   action,
   ipAddress,
@@ -117,7 +113,7 @@ export const logDoctorActivity = async ({
   ipAddress?: string;
   userAgent?: string;
   next: NextFunction;
-}) => {
+}) {
   try {
     if (action !== "Doctor Token Refreshed") {
       return await DoctorActivityLogs.create({
@@ -152,4 +148,27 @@ export const logDoctorActivity = async ({
   } catch (err: any) {
     return next(new ErrorHandler(err.message, 400));
   }
-};
+}
+
+function to12HrRange(start: Date, end: Date): string {
+  return `${format(start, "h:mm a")} - ${format(end, "h:mm a")}`;
+}
+
+function generate30MinsSlot(start: string, end: string): string[] {
+  const result: string[] = [];
+
+  const startDate = parse(start, "HH:mm", new Date());
+  const endDate = parse(end, "HH:mm", new Date());
+
+  let current = startDate;
+
+  while (
+    isBefore(addMinutes(current, 30), endDate) ||
+    +addMinutes(current, 30) === +endDate
+  ) {
+    const next = addMinutes(current, 30);
+    result.push(to12HrRange(current, next));
+    current = next;
+  }
+  return result;
+}
