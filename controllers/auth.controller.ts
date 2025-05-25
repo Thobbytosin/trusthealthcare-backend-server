@@ -13,12 +13,9 @@ import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { sendMail } from "../utils/sendMail";
-import {
-  accessTokenOptions,
-  signInWithCredentials,
-  verificationTokenOptions,
-} from "../utils/token";
+import { accessTokenOptions, verificationTokenOptions } from "../utils/token";
 import redis from "../utils/redis";
+import { signInWithCredentials } from "../services/signIn.service";
 
 dotenv.config();
 
