@@ -154,7 +154,7 @@ function to12HrRange(start: Date, end: Date): string {
   return `${format(start, "h:mm a")} - ${format(end, "h:mm a")}`;
 }
 
-function generate30MinsSlot(start: string, end: string): string[] {
+export function generate30MinsSlot(start: string, end: string): string[] {
   const result: string[] = [];
 
   const startDate = parse(start, "HH:mm", new Date());

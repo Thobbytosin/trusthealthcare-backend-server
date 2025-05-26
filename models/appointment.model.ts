@@ -8,13 +8,14 @@ import {
   Table,
 } from "sequelize-typescript";
 import { Patient } from "./patient.model";
-import { Doctor } from "./doctor.model";
+import { Doctor, IDoctor } from "./doctor.model";
 import { Transaction } from "./transaction.model";
-import { User } from "./user.model";
+import { IUser, User } from "./user.model";
 
 export enum AppointmentStatus {
   PENDING = "Pending",
   CONFIRMED = "Confirmed",
+  ONGOING = "Ongoing",
   CANCELLED = "Cancelled",
   COMPLETED = "Completed",
   RESCHEDULED = "Rescheduled",
@@ -29,11 +30,30 @@ export enum AppointmentType {
   ROUTINE = "Routine",
 }
 
+export interface IAppointment {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  transactionId: string;
+  bookingDate: Date;
+  appointmentDate: Date;
+  bookingSlot: string;
+  status: string;
+  appointmentType: string;
+  reason: string;
+  notes?: string;
+  meetingLink: string;
+  isFollowUpRequired?: boolean;
+  followUpDate?: string;
+  doctorCancellationReason?: string;
+  patientCancellationReason?: string;
+}
+
 @Table({
   tableName: "appointments",
   timestamps: true,
 })
-export class Appointment extends Model {
+export class Appointment extends Model<IAppointment> implements IAppointment {
   @Default(DataType.UUIDV4)
   @Column({
     type: DataType.UUID,
@@ -49,9 +69,6 @@ export class Appointment extends Model {
   })
   patientId!: string;
 
-  @BelongsTo(() => User)
-  patient!: User;
-
   @ForeignKey(() => Doctor)
   @Column({
     type: DataType.UUID,
@@ -59,13 +76,9 @@ export class Appointment extends Model {
   })
   doctorId!: string;
 
-  @BelongsTo(() => Doctor)
-  doctor!: Doctor;
-
   @Column({
     type: DataType.DATE,
     allowNull: false,
-    defaultValue: DataType.NOW,
   })
   bookingDate!: Date;
 
@@ -79,31 +92,13 @@ export class Appointment extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  slot!: string;
+  bookingSlot!: string;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.ENUM(...Object.values(AppointmentType)),
     allowNull: false,
-    validate: {
-      isAfter: new Date().toISOString(),
-    },
   })
-  appointmentStartTime!: Date;
-
-  @Column({
-    type: DataType.DATE,
-    allowNull: false,
-    validate: {
-      isAfterStartTime(value: Date) {
-        if (this.appointmentStartTime && value <= this.appointmentStartTime) {
-          throw new Error(
-            "Appointment session can not end when it has not started"
-          );
-        }
-      },
-    },
-  })
-  appointmentEndTime!: Date;
+  appointmentType!: AppointmentType;
 
   @Column({
     type: DataType.ENUM(...Object.values(AppointmentStatus)),
@@ -111,12 +106,6 @@ export class Appointment extends Model {
     allowNull: false,
   })
   status!: AppointmentStatus;
-
-  @Column({
-    type: DataType.ENUM(...Object.values(AppointmentType)),
-    allowNull: false,
-  })
-  appointmentType!: AppointmentType;
 
   @Column({
     type: DataType.STRING,
@@ -129,37 +118,28 @@ export class Appointment extends Model {
   })
   notes?: string;
 
-  @Column({
-    type: DataType.BOOLEAN,
-    defaultValue: false,
-  })
-  isPaid!: boolean;
-
   @ForeignKey(() => Transaction)
   @Column({
     type: DataType.UUID,
-    allowNull: true,
+    allowNull: false,
   })
-  transactionId?: string;
-
-  @BelongsTo(() => Transaction)
-  transaction?: Transaction;
+  transactionId!: string;
 
   @Column({
     type: DataType.STRING,
   })
-  meetingLink?: string; // For virtual appointments
+  meetingLink!: string; // For virtual appointments
 
   @Column({
     type: DataType.BOOLEAN,
     defaultValue: false,
   })
-  isFollowUpRequired!: boolean;
+  isFollowUpRequired?: boolean;
 
   @Column({
-    type: DataType.DATE,
+    type: DataType.STRING,
   })
-  followUpDate?: Date;
+  followUpDate?: string;
 
   @Column({
     type: DataType.STRING,

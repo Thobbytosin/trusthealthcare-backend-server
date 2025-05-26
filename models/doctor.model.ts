@@ -8,6 +8,13 @@ import {
 } from "sequelize-typescript";
 import { User } from "./user.model";
 
+type Review = {
+  patientId: number;
+  comment: string;
+  rating: number;
+  date: Date;
+};
+
 export type DoctorAppointment = {
   patient: { name: string };
   title: string;
@@ -18,7 +25,7 @@ export type DoctorAppointment = {
   extraNotes?: string;
 };
 
-export type IDoctor = {
+export interface IDoctor {
   id: string;
   name: string;
   email: string;
@@ -56,13 +63,6 @@ export type IDoctor = {
   uploadedBy: "doctor" | "admin";
   uploadedById: string;
   available: boolean;
-};
-
-interface Review {
-  patientId: number;
-  comment: string;
-  rating: number;
-  date: Date;
 }
 
 @Table({
