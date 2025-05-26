@@ -10,6 +10,7 @@ import { logDoctorActivity } from "../utils/helpers";
 import { Sequelize } from "sequelize-typescript";
 import redis from "../utils/redis";
 import { name } from "ejs";
+import { doctorAvailableSlots } from "../services/availableSlots.service";
 
 //////////////////////////////////////////////////////////////////////////////////////////////// UPLOAD DOCTOR
 export const uploadDoctor = catchAsyncError(
@@ -188,8 +189,8 @@ export const updateDoctor = catchAsyncError(
 export const getDoctor = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const doctorId = req.params.doctor_id;
-    const cachedDoctor = await redis.get(`doctor - ${doctorId}`);
-    // const cachedDoctor = false;
+    // const cachedDoctor = await redis.get(`doctor - ${doctorId}`);
+    const cachedDoctor = false;
 
     if (cachedDoctor) {
       res.status(200).json({
@@ -198,7 +199,7 @@ export const getDoctor = catchAsyncError(
         doctor: JSON.parse(cachedDoctor),
       });
     } else {
-      const doctor: IDoctor | null = await Doctor.findOne({
+      const doctor: any = await Doctor.findOne({
         where: { id: doctorId },
         attributes: {
           exclude: [
@@ -411,6 +412,43 @@ export const getSomeDoctorsUnauthenticated = catchAsyncError(
   }
 );
 
-// [{"institution": "University of Lagos, Nigeria", "graduationYear": "2013", "course": "MBBS"},{"institution":  "Johns Hopkins School of Medicine, USA", "graduationYear": "2017", "course": "MD"}]
+// //////////////////////////////////////////////////////////////////////////////////////////////// GET DOCTOR AVAILABLE SLOT
+export const getDoctorAvailableSlot = catchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const doctorId = req.params.doctor_id;
+    const rawDate = req.query.date as string;
+    const date = new Date(rawDate);
 
-// [{"name": "Evergreen Skin & Laser Clinic","address": "27 Ologun Agbaje Street, Victoria Island"}]
+    // const cachedDoctorSlots: any = false;
+    const cachedDoctorSlots: any = await redis.get(
+      `doctor-slots-${doctorId}-${rawDate}`
+    );
+
+    if (cachedDoctorSlots) {
+      res.status(200).json({
+        success: true,
+        availableSlots: JSON.parse(cachedDoctorSlots.selectedDay),
+      });
+      return;
+    }
+
+    if (!doctorId || !rawDate)
+      return next(
+        new ErrorHandler("Doctor available slots not available", 400)
+      );
+
+    const data: any = await doctorAvailableSlots(doctorId, date, next);
+
+    await redis.set(
+      `doctor-slots-${doctorId}-${rawDate}`,
+      JSON.stringify(data),
+      "EX",
+      14 * 24 * 60 * 60 // expires in 14days
+    );
+
+    res.status(200).json({
+      success: true,
+      availableSlots: data.selectedDay,
+    });
+  }
+);

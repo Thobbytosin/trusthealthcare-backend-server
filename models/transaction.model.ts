@@ -1,10 +1,14 @@
 import { Column, DataType, Default, Model, Table } from "sequelize-typescript";
 
+export interface ITransaction {
+  id: string;
+}
+
 @Table({
   tableName: "transactions",
   timestamps: true,
 })
-export class Transaction extends Model {
+export class Transaction extends Model<ITransaction> implements ITransaction {
   @Default(DataType.UUIDV4)
   @Column({
     type: DataType.UUID,
@@ -12,6 +16,12 @@ export class Transaction extends Model {
     allowNull: false,
   })
   id!: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  doctorId!: string;
 }
 
 // import mongoose, { Document, Model, Schema } from "mongoose";

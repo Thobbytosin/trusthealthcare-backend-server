@@ -7,6 +7,7 @@ import { authorizeUpload } from "../middlewares/admin-auth";
 import {
   getAllDoctorsList,
   getDoctor,
+  getDoctorAvailableSlot,
   getSomeDoctorsUnauthenticated,
   updateDoctor,
   uploadDoctor,
@@ -44,5 +45,12 @@ doctorRouter.put(
 
 // GET A DOCTOR
 doctorRouter.get("/get-doctor/:doctor_id", isUserAuthenticated, getDoctor);
+
+// GET A DOCTOR AVAILABLE SLOTS
+doctorRouter.get(
+  "/available-slots/:doctor_id",
+  isUserAuthenticated,
+  getDoctorAvailableSlot
+);
 
 export default doctorRouter;
