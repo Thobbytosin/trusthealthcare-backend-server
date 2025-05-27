@@ -425,9 +425,10 @@ export const getDoctorAvailableSlot = catchAsyncError(
     );
 
     if (cachedDoctorSlots) {
+      const parsedSlots = JSON.parse(cachedDoctorSlots);
       res.status(200).json({
         success: true,
-        availableSlots: JSON.parse(cachedDoctorSlots.selectedDay),
+        availableSlots: parsedSlots.selectedDay,
       });
       return;
     }
