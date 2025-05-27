@@ -141,7 +141,10 @@ export const getUserData = catchAsyncError(
       res.status(200).json({ success: true, user: JSON.parse(cachedData) });
     } else {
       const user = await User.findByPk(userId);
-      if (!user) return next(new ErrorHandler("Account not found", 404));
+      if (!user)
+        return next(
+          new ErrorHandler("Not Found: User Account does not exist", 404)
+        );
 
       res.status(200).json({ success: true, user });
     }

@@ -12,6 +12,7 @@ export interface IUser {
   id: string;
   name: string;
   email: string;
+  password: string;
   avatar?: { id: string; url: string };
   role: ["user" | "patient" | "doctor" | "admin"];
   lastLogin: Date | null;
@@ -25,7 +26,7 @@ export interface IUser {
   tableName: "users",
   defaultScope: {
     attributes: {
-      exclude: ["password"], // Always exclude by default
+      exclude: ["password", "createdAt", "updatedAt"], // Always exclude by default
     },
   },
   scopes: {
@@ -35,7 +36,7 @@ export interface IUser {
   },
   timestamps: true, // createdAt and updatedAt
 })
-export class User extends Model<IUser> implements IUser {
+export class User extends Model {
   @Default(DataType.UUIDV4)
   @Column({
     type: DataType.UUID,

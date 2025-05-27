@@ -46,7 +46,12 @@ export const registerUser = catchAsyncError(
     const isUserExists = await User.findOne({ where: { email } });
 
     if (isUserExists) {
-      return next(new ErrorHandler("Account already exists", 409));
+      return next(
+        new ErrorHandler(
+          "Account already exists. Please proceed to sign in to your account",
+          409
+        )
+      );
     }
 
     if (!isEmailValid.test(email)) {
@@ -97,7 +102,7 @@ export const registerUser = catchAsyncError(
           "A 6-digit verification code has been sent to your email address.",
       });
     } catch (error: any) {
-      return next(new ErrorHandler("Mail sending Failed", 400));
+      return next(new ErrorHandler("Falied to send verification mail", 400));
     }
   }
 );
@@ -109,11 +114,11 @@ export const accountVerification = catchAsyncError(
     const { verificationCode } = req.body;
 
     if (!verificationToken) {
-      return next(new ErrorHandler("Verification code has expired", 403));
+      return next(new ErrorHandler("Verification code has expired", 401));
     }
 
     if (!verificationCode || verificationCode.trim() === "") {
-      return next(new ErrorHandler("All fields are required", 403));
+      return next(new ErrorHandler("All fields are required", 400));
     }
 
     const credentials: { user: User; verificationCode: string } = jwt.verify(
@@ -132,13 +137,16 @@ export const accountVerification = catchAsyncError(
     const userExists = await User.findOne({ where: { email } });
 
     if (userExists)
-      return next(new ErrorHandler("Account already exists", 403));
+      return next(new ErrorHandler("Account already exists", 409));
 
     await User.create({ name, email, password, verified: true });
 
     const user = await User.findOne({ where: { email } });
 
-    if (!user) return next(new ErrorHandler("Error Proccessing User", 404));
+    if (!user)
+      return next(
+        new ErrorHandler("Error processing acocount: Account not found", 404)
+      );
 
     // data to be sent to the email
     const mailData = { name: user.name };
@@ -164,7 +172,9 @@ export const accountVerification = catchAsyncError(
         message: "Account Verification Successful!",
       });
     } catch (error: any) {
-      return next(new ErrorHandler("Mail sending Failed", 404));
+      return next(
+        new ErrorHandler("Falied to send verification success mail", 400)
+      );
     }
   }
 );
@@ -175,7 +185,7 @@ export const resendVerificationCode = catchAsyncError(
     const oldVerificationToken = req.cookies.verification_token;
 
     if (!oldVerificationToken)
-      return next(new ErrorHandler("Session has expired. Try Again", 403));
+      return next(new ErrorHandler("Session has expired. Try Again", 401));
 
     const credentials: { user: User; verificationCode: string } = jwt.verify(
       oldVerificationToken,
@@ -213,13 +223,13 @@ export const resendVerificationCode = catchAsyncError(
         verificationTokenOptions
       );
 
-      res.status(201).json({
+      res.status(200).json({
         success: true,
         message:
           "A new 6-digit verification code has been re-sent to your email address.",
       });
     } catch (error: any) {
-      return next(new ErrorHandler("Mail sending Failed", 400));
+      return next(new ErrorHandler("Falied to re-send verification mail", 400));
     }
   }
 );
@@ -271,7 +281,7 @@ export const loginUser = catchAsyncError(
 
     // sign in user
     if (newUser) {
-      signInWithCredentials(newUser, 200, res, req, next);
+      signInWithCredentials(200, res, req, next, newUser);
     } else {
       return next(new ErrorHandler("Error signing in", 408));
     }

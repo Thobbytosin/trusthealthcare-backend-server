@@ -5,17 +5,17 @@ import {
   getAllDoctorsAdmin,
   getAllUsersAdmin,
   getDoctorAdmin,
-} from "../controllers/admin.controller";
-import { isUserAuthenticated } from "../middlewares/authentication";
-import { authorizeRoleAdmin } from "../middlewares/admin-auth";
+} from "../../controllers/admin.controller";
+import { isUserAuthenticated } from "../../middlewares/user-auth";
+import { authorizeRoleAdmin } from "../../middlewares/admin-auth";
 import {
   doctorApplicationApproval,
   doctorApplicationDenial,
-} from "../controllers/admin.controller";
-const adminRouter = Router();
+} from "../../controllers/admin.controller";
+const adminRouterV1 = Router();
 
 // DELETE A USER ACCOUNT
-adminRouter.delete(
+adminRouterV1.delete(
   "/delete-user/:userId",
   isUserAuthenticated,
   authorizeRoleAdmin("admin"),
@@ -23,7 +23,7 @@ adminRouter.delete(
 );
 
 // GET ALL USERS
-adminRouter.get(
+adminRouterV1.get(
   "/get-all-users-admin",
   isUserAuthenticated,
   authorizeRoleAdmin("admin"),
@@ -31,7 +31,7 @@ adminRouter.get(
 );
 
 // GET ALL DOCTORS
-adminRouter.get(
+adminRouterV1.get(
   "/get-all-doctors-admin",
   isUserAuthenticated,
   authorizeRoleAdmin("admin"),
@@ -39,7 +39,7 @@ adminRouter.get(
 );
 
 // GET A DOCTOR
-adminRouter.get(
+adminRouterV1.get(
   "/get-doctor-admin/:doctor_id",
   isUserAuthenticated,
   authorizeRoleAdmin("admin"),
@@ -47,7 +47,7 @@ adminRouter.get(
 );
 
 // APPLICATION ACCEPTED
-adminRouter.put(
+adminRouterV1.put(
   "/application-success/:doctor_id",
   isUserAuthenticated,
   authorizeRoleAdmin("admin"),
@@ -55,7 +55,7 @@ adminRouter.put(
 );
 
 // APPLICATION DENIED
-adminRouter.put(
+adminRouterV1.put(
   "/application-failed/:doctor_id",
   isUserAuthenticated,
   authorizeRoleAdmin("admin"),
@@ -63,11 +63,11 @@ adminRouter.put(
 );
 
 // DELETE DOCTOR ACCOUNT
-adminRouter.delete(
+adminRouterV1.delete(
   "/delete-doctor/:doctor_id",
   isUserAuthenticated,
   authorizeRoleAdmin("admin"),
   deleteDoctorAccount
 );
 
-export default adminRouter;
+export default adminRouterV1;

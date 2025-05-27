@@ -10,13 +10,16 @@ const ErrorMiddleware = (
   err.statusCode = typeof err === "object" ? err.statusCode || 500 : 500;
   err.message =
     typeof err === "object"
-      ? err.message || "Internal Server Error"
+      ? err.message || "Something went wrong. Please try again later."
       : String(err);
-  err.name = typeof err === "object" ? err.name || "Server Error" : String(err);
+  err.name =
+    typeof err === "object"
+      ? err.name || "Something went wrong. Please try again later."
+      : String(err);
 
   if (err.name === "TokenExpiredError" || err.message === "jwt expired") {
-    const message = "Session has ended. Kindly Login to access this.";
-    err = new ErrorHandler(message, 400);
+    const message = "Session has ended.";
+    err = new ErrorHandler(message, 401);
   }
 
   if (err.message === "invalid signature") {
@@ -26,7 +29,7 @@ const ErrorMiddleware = (
 
   if (err.name === "JsonWebTokenError") {
     const message = "Session has expired. Kindly login.";
-    err = new ErrorHandler(message, 400);
+    err = new ErrorHandler(message, 401);
   }
 
   if (err.message.startsWith("Doctor validation failed:")) {

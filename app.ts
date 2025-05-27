@@ -4,13 +4,15 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { rateLimit } from "express-rate-limit";
 import ErrorMiddleware from "./middlewares/error";
-import userRouter from "./routes/user.route";
-import doctorRouter from "./routes/doctor.route";
-import authRouter from "./routes/auth.route";
-import adminRouter from "./routes/admin.route";
-import analyticsRouter from "./routes/analytics.route";
 import { checkCookieConsent } from "./middlewares/cookie-consent";
-import suggestionRouter from "./routes/suggestion.route";
+import authRouterV1 from "./routes/v1/auth.route";
+import userRouterV1 from "./routes/v1/user.route";
+import doctorRouterV1 from "./routes/v1/doctor.route";
+import adminRouterV1 from "./routes/v1/admin.route";
+import analyticsRouterV1 from "./routes/v1/analytics.route";
+import suggestionRouterV1 from "./routes/v1/suggestion.route";
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "./docs/swaggerDocument";
 
 export const app = express();
 
@@ -54,13 +56,28 @@ app.use(limiter);
 // check consent on all routes
 app.use(checkCookieConsent);
 
+// API DOCUMENTATION
+app.use(
+  "/api/v1/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    swaggerOptions: {
+      requestInterceptor: (req: any) => {
+        req.credentials = "include";
+        return req;
+      },
+    },
+  })
+);
+
 // ROUTES
-app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/user", userRouter);
-app.use("/api/v1/doctor", doctorRouter);
-app.use("/api/v1/admin", adminRouter);
-app.use("/api/v1/analytics", analyticsRouter);
-app.use("/api/v1/suggestion", suggestionRouter);
+// VERSION 1.0
+app.use("/api/v1/auth", authRouterV1);
+app.use("/api/v1/user", userRouterV1);
+app.use("/api/v1/doctor", doctorRouterV1);
+app.use("/api/v1/admin", adminRouterV1);
+app.use("/api/v1/analytics", analyticsRouterV1);
+app.use("/api/v1/suggestion", suggestionRouterV1);
 
 // unknown route
 app.all("*", (req, res, next) => {
