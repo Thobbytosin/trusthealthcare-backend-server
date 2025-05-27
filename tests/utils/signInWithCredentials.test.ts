@@ -1,12 +1,14 @@
 import jwt from "jsonwebtoken";
-import { signInWithCredentials } from "../../utils/token";
-import { Response } from "express";
+import { Response, Request, NextFunction } from "express";
 import { configDotenv } from "dotenv";
+import { signInWithCredentials } from "../../services/signIn.service";
 
 configDotenv();
 
 describe("signInWithCredentials", () => {
+  let req: Partial<Request>;
   let res: Partial<Response>;
+  let next: Partial<NextFunction>;
   let jsonMock: jest.Mock;
   let statusMock: jest.Mock;
   let cookieMock: jest.Mock;
@@ -36,7 +38,13 @@ describe("signInWithCredentials", () => {
         : "mocked_refresh_token";
     });
 
-    signInWithCredentials(mockUser, 200, res as Response);
+    signInWithCredentials(
+      200,
+      res as Response,
+      req as Request,
+      next as NextFunction,
+      mockUser
+    );
 
     expect(cookieMock).toHaveBeenCalledTimes(2);
 

@@ -10,11 +10,11 @@ import { logDoctorActivity, logUserActivity } from "../utils/helpers";
 import redis from "../utils/redis";
 
 export const signInWithCredentials = async (
-  user: User,
   statusCode: number,
   res: Response,
   req: Request,
-  next: NextFunction
+  next: NextFunction,
+  user?: User | any
 ) => {
   // generate unique access token when user logs in
   const accessToken = jwt.sign(
@@ -40,7 +40,7 @@ export const signInWithCredentials = async (
   res.cookie("refresh_token", refreshToken, refreshTokenOptions);
   res.cookie("has_logged_in", "true", hasLoggedInTokenOptions);
 
-  if (user.signedInAs === "user") {
+  if (user?.signedInAs === "user") {
     await logUserActivity({
       userId: user.id,
       action: "Logged in",
@@ -48,7 +48,7 @@ export const signInWithCredentials = async (
       userAgent: req.headers["user-agent"],
       next,
     });
-  } else if (user.signedInAs === "doctor") {
+  } else if (user?.signedInAs === "doctor") {
     await logDoctorActivity({
       doctorId: user.doctorId || "",
       action: "Doctor Logged in",
@@ -60,7 +60,7 @@ export const signInWithCredentials = async (
 
   // save user to redis
   await redis.set(
-    `user - ${user.id}`,
+    `user - ${user?.id}`,
     JSON.stringify(user),
     "EX",
     14 * 24 * 60 * 60
