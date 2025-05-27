@@ -1,15 +1,15 @@
 import { Router } from "express";
-import { isUserAuthenticated } from "../middlewares/authentication";
-import { authorizeRoleAdmin } from "../middlewares/admin-auth";
+import { isUserAuthenticated } from "../../middlewares/user-auth";
+import { authorizeRoleAdmin } from "../../middlewares/admin-auth";
 import {
   getDoctorsAnalytics,
   getUsersAnalytics,
-} from "../controllers/analytics.controller";
+} from "../../controllers/analytics.controller";
 
-const analyticsRouter = Router();
+const analyticsRouterV1 = Router();
 
 // GET USERS ANALYTICS (ADMIN)
-analyticsRouter.get(
+analyticsRouterV1.get(
   "/analytics/users",
   isUserAuthenticated,
   authorizeRoleAdmin("admin"),
@@ -17,11 +17,11 @@ analyticsRouter.get(
 );
 
 // GET DOCTORS ANALYTICS (ADMIN)
-analyticsRouter.get(
+analyticsRouterV1.get(
   "/analytics/doctors",
   isUserAuthenticated,
   authorizeRoleAdmin("admin"),
   getDoctorsAnalytics
 );
 
-export default analyticsRouter;
+export default analyticsRouterV1;

@@ -3,25 +3,25 @@ import {
   forgotPassword,
   getUserData,
   resetPassword,
-} from "../controllers/user.controller";
+} from "../../controllers/user.controller";
 import {
   hasPasswordChangedLast24Hours,
   isUserAuthenticated,
-} from "../middlewares/authentication";
+} from "../../middlewares/user-auth";
 
-const userRouter = Router();
+const userRouterV1 = Router();
 
 // FORGOT PASSWORD
-userRouter.post(
+userRouterV1.post(
   "/forgot-password",
   hasPasswordChangedLast24Hours,
   forgotPassword
 );
 
 // RESET PASSWORD
-userRouter.post("/reset-password", resetPassword);
+userRouterV1.post("/reset-password", resetPassword);
 
 // GET USER DETAILS
-userRouter.get("/me", isUserAuthenticated, getUserData);
+userRouterV1.get("/me", isUserAuthenticated, getUserData);
 
-export default userRouter;
+export default userRouterV1;

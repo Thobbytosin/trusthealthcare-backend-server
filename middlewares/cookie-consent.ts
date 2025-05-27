@@ -10,6 +10,11 @@ export interface CookieConsentType {
 
 export const checkCookieConsent = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
+    // skip api docs
+    if (req.path.startsWith("/api/v1/api-docs")) {
+      return next();
+    }
+
     const rawConsent = req.headers["x-cookie-consent"];
 
     if (!rawConsent)
