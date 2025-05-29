@@ -4,6 +4,7 @@ import ErrorHandler from "../utils/errorHandler";
 import { User } from "../models/user.model";
 import {
   createVerificationToken,
+  generateApiKey,
   isEmailValid,
   isPasswordStrong,
   logDoctorActivity,
@@ -16,6 +17,7 @@ import { sendMail } from "../utils/sendMail";
 import { accessTokenOptions, verificationTokenOptions } from "../utils/token";
 import redis from "../utils/redis";
 import { signInWithCredentials } from "../services/signIn.service";
+import { ApiKey } from "../models/apiKey.model";
 
 dotenv.config();
 
@@ -148,34 +150,60 @@ export const accountVerification = catchAsyncError(
         new ErrorHandler("Error processing acocount: Account not found", 404)
       );
 
+    // check if user already has an apikey
+    const userHasApiKeyAlready = await ApiKey.findOne({
+      where: { email, isActive: true },
+    });
+
+    const apiKey = generateApiKey();
+
+    if (!userHasApiKeyAlready) {
+      await ApiKey.create({
+        key: apiKey,
+        owner: user.id,
+        email: user.email,
+        isActive: true,
+      });
+    }
+
     // data to be sent to the email
     const mailData = { name: user.name };
 
-    try {
-      await sendMail({
+    const results = await Promise.allSettled([
+      sendMail({
         email: user.email,
         subject: "Welcome Message",
         templateData: mailData,
         templateName: "welcome-email.ejs",
-      });
+      }),
 
-      await logUserActivity({
+      logUserActivity({
         userId: user.id,
         action: "Signed up",
         ipAddress: req.ip,
         userAgent: req.headers["user-agent"],
         next,
-      });
+      }),
+    ]);
 
-      res.status(201).json({
-        success: true,
-        message: "Account Verification Successful!",
-      });
-    } catch (error: any) {
+    const [mailResult, logResult] = results;
+
+    if (mailResult.status === "rejected") {
       return next(
         new ErrorHandler("Falied to send verification success mail", 400)
       );
     }
+
+    if (logResult.status === "rejected") {
+      return next(
+        new ErrorHandler("Error verifying user: Something went wrong", 400)
+      );
+    }
+
+    res.status(201).json({
+      success: true,
+      message: "Account Verification Successful!",
+    });
   }
 );
 
@@ -361,7 +389,7 @@ export const refreshToken = catchAsyncError(
 //////////////////////////////////////////////////////////////////////////////////////////////// CLEAR ACCESS TOKEN
 export const clearAccessToken = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    res.clearCookie("access_token");
+    res.clearCookie("tr_host_x");
 
     res.status(200).json({
       success: true,

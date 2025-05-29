@@ -10,9 +10,11 @@ import userRouterV1 from "./routes/v1/user.route";
 import doctorRouterV1 from "./routes/v1/doctor.route";
 import adminRouterV1 from "./routes/v1/admin.route";
 import analyticsRouterV1 from "./routes/v1/analytics.route";
-import suggestionRouterV1 from "./routes/v1/suggestion.route";
 import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./docs/swaggerDocument";
+import apiKeyRouterV1 from "./routes/v1/apiKey.route";
+import { apiKeyAuth } from "./middlewares/apiKey-auth";
+import { isUserAuthenticated } from "./middlewares/user-auth";
 
 export const app = express();
 
@@ -40,6 +42,9 @@ app.use(
 app.get("/api/v1/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
+
+// request for api key
+app.use("/api/v1/apiKey", apiKeyRouterV1);
 
 // rateLimit middleware
 const limiter = rateLimit({
@@ -75,9 +80,13 @@ app.use(
 app.use("/api/v1/auth", authRouterV1);
 app.use("/api/v1/user", userRouterV1);
 app.use("/api/v1/doctor", doctorRouterV1);
-app.use("/api/v1/admin", adminRouterV1);
-app.use("/api/v1/analytics", analyticsRouterV1);
-app.use("/api/v1/suggestion", suggestionRouterV1);
+app.use("/api/v1/admin", isUserAuthenticated, apiKeyAuth, adminRouterV1);
+app.use(
+  "/api/v1/analytics",
+  isUserAuthenticated,
+  apiKeyAuth,
+  analyticsRouterV1
+);
 
 // unknown route
 app.all("*", (req, res, next) => {

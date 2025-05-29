@@ -178,11 +178,25 @@ const authSwagger = {
                     message: "All fields are required",
                   },
                 },
-                failedVerificationMail: {
-                  summary: "Verification mail failed",
+                verifyingError: {
+                  summary: "Error verifying user: Something went wrong",
                   value: {
                     success: false,
-                    message: "Falied to send verification mail",
+                    message: "Error verifying user: Something went wrong",
+                  },
+                },
+                validatingError: {
+                  summary: "Error validating your account. Try again",
+                  value: {
+                    success: false,
+                    message: "Error validating your account. Try again",
+                  },
+                },
+                failedSuccessMail: {
+                  summary: "Verification success mail failed",
+                  value: {
+                    success: false,
+                    message: "Falied to send verification success mail",
                   },
                 },
               },

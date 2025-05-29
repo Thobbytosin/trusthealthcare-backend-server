@@ -6,7 +6,6 @@ import {
   getAllUsersAdmin,
   getDoctorAdmin,
 } from "../../controllers/admin.controller";
-import { isUserAuthenticated } from "../../middlewares/user-auth";
 import { authorizeRoleAdmin } from "../../middlewares/admin-auth";
 import {
   doctorApplicationApproval,
@@ -17,7 +16,6 @@ const adminRouterV1 = Router();
 // DELETE A USER ACCOUNT
 adminRouterV1.delete(
   "/delete-user/:userId",
-  isUserAuthenticated,
   authorizeRoleAdmin("admin"),
   deleteUser
 );
@@ -25,7 +23,6 @@ adminRouterV1.delete(
 // GET ALL USERS
 adminRouterV1.get(
   "/get-all-users-admin",
-  isUserAuthenticated,
   authorizeRoleAdmin("admin"),
   getAllUsersAdmin
 );
@@ -33,7 +30,6 @@ adminRouterV1.get(
 // GET ALL DOCTORS
 adminRouterV1.get(
   "/get-all-doctors-admin",
-  isUserAuthenticated,
   authorizeRoleAdmin("admin"),
   getAllDoctorsAdmin
 );
@@ -41,7 +37,6 @@ adminRouterV1.get(
 // GET A DOCTOR
 adminRouterV1.get(
   "/get-doctor-admin/:doctor_id",
-  isUserAuthenticated,
   authorizeRoleAdmin("admin"),
   getDoctorAdmin
 );
@@ -49,7 +44,6 @@ adminRouterV1.get(
 // APPLICATION ACCEPTED
 adminRouterV1.put(
   "/application-success/:doctor_id",
-  isUserAuthenticated,
   authorizeRoleAdmin("admin"),
   doctorApplicationApproval
 );
@@ -57,7 +51,6 @@ adminRouterV1.put(
 // APPLICATION DENIED
 adminRouterV1.put(
   "/application-failed/:doctor_id",
-  isUserAuthenticated,
   authorizeRoleAdmin("admin"),
   doctorApplicationDenial
 );
@@ -65,7 +58,6 @@ adminRouterV1.put(
 // DELETE DOCTOR ACCOUNT
 adminRouterV1.delete(
   "/delete-doctor/:doctor_id",
-  isUserAuthenticated,
   authorizeRoleAdmin("admin"),
   deleteDoctorAccount
 );

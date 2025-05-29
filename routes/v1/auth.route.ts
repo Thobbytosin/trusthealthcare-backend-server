@@ -10,6 +10,7 @@ import {
 } from "../../controllers/auth.controller";
 import { isUserAuthenticated } from "../../middlewares/user-auth";
 import { updateToken } from "../../middlewares/updateToken";
+import { apiKeyAuth } from "../../middlewares/apiKey-auth";
 
 const authRouterV1 = Router();
 
@@ -31,7 +32,7 @@ authRouterV1.post("/signout", isUserAuthenticated, signOut);
 // REFRESH TOKEN
 authRouterV1.get("/refresh-tokens", updateToken, refreshToken);
 
-// REFRESH TOKEN
+// CLEAR ACCESS TOKEN
 authRouterV1.get("/clear-access-token", clearAccessToken);
 
 export default authRouterV1;
