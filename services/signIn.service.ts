@@ -8,6 +8,9 @@ import {
 } from "../utils/token";
 import { logDoctorActivity, logUserActivity } from "../utils/helpers";
 import redis from "../utils/redis";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const signInWithCredentials = async (
   statusCode: number,
@@ -35,10 +38,12 @@ export const signInWithCredentials = async (
     Date.now() + accessTokenOptions.maxAge
   ).getTime();
 
+  const loggedInToken = process.env.LOGGED_IN_TOKEN;
+
   //   save tokens in the response cookie
-  res.cookie("access_token", accessToken, accessTokenOptions);
-  res.cookie("refresh_token", refreshToken, refreshTokenOptions);
-  res.cookie("has_logged_in", "true", hasLoggedInTokenOptions);
+  res.cookie("tr_host_x", accessToken, accessTokenOptions);
+  res.cookie("tc_agent_x", refreshToken, refreshTokenOptions);
+  res.cookie("_xur_cr-host", loggedInToken, hasLoggedInTokenOptions);
 
   if (user?.signedInAs === "user") {
     await logUserActivity({

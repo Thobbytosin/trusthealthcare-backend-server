@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import catchAsyncError from "../middlewares/catchAsyncError";
 import ErrorHandler from "../utils/errorHandler";
 import { uploadToCloudinary } from "../utils/cloudinary";
-import { Doctor, IDoctor } from "../models/doctor.model";
+import { Doctor } from "../models/doctor.model";
 import { Op } from "sequelize";
 import { User } from "../models/user.model";
 import { signOut } from "./auth.controller";
@@ -417,6 +417,15 @@ export const getDoctorAvailableSlot = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const doctorId = req.params.doctor_id;
     const rawDate = req.query.date as string;
+
+    if (rawDate === "none") {
+      res.status(200).json({
+        success: true,
+        message: "No available slots",
+      });
+      return;
+    }
+
     const date = new Date(rawDate);
 
     // const cachedDoctorSlots: any = false;
@@ -451,5 +460,44 @@ export const getDoctorAvailableSlot = catchAsyncError(
       success: true,
       availableSlots: data.selectedDay,
     });
+  }
+);
+
+// //////////////////////////////////////////////////////////////////////////////////////////////// GET A DOCTOR METATAG (USER)
+export const getDoctorMeta = catchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const doctorId = req.params.doctor_id;
+    const cachedTags = await redis.get(`doctorMeta - ${doctorId}`);
+    // const cachedTags = false;
+
+    if (cachedTags) {
+      const doctor = JSON.parse(cachedTags);
+      res.status(200).json({
+        success: true,
+        message: "Doctor meta tags received",
+        tags: { name: doctor.name, specialty: doctor.specialization },
+      });
+    } else {
+      const doctor: any = await Doctor.findOne({
+        where: { id: doctorId },
+      });
+
+      if (!doctor)
+        return next(new ErrorHandler("Error: Doctor not found", 404));
+
+      // save doctor to redis
+      await redis.set(
+        `doctorMeta - ${doctor.id}`,
+        JSON.stringify(doctor),
+        "EX",
+        14 * 24 * 60 * 60 // 14 days
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Doctor meta tags received",
+        tags: { name: doctor.name, specialty: doctor.specialization },
+      });
+    }
   }
 );

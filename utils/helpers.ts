@@ -4,6 +4,7 @@ import { UserActivityLogs } from "../models/userActivity.model";
 import { NextFunction } from "express";
 import { DoctorActivityLogs } from "../models/doctorActivity.model";
 import { addMinutes, format, isBefore, parse } from "date-fns";
+import crypto from "crypto";
 
 export const isEmailValid: RegExp =
   /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -171,4 +172,9 @@ export function generate30MinsSlot(start: string, end: string): string[] {
     current = next;
   }
   return result;
+}
+
+export function generateApiKey() {
+  const key = crypto.randomBytes(32).toString("hex");
+  return key;
 }

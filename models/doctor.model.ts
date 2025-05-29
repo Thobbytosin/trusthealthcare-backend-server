@@ -178,12 +178,14 @@ export class Doctor extends Model<IDoctor> implements IDoctor {
   @Column({
     type: DataType.ARRAY(DataType.STRING),
     allowNull: false,
+    defaultValue: ["none"],
   })
   availableDays!: string[];
 
   @Column({
     type: DataType.JSONB,
     allowNull: false,
+    defaultValue: [{ Noday: { label: "none", start: "none", end: "none" } }],
   })
   timeSlots!: {
     [key: string]: {
@@ -296,3 +298,73 @@ export class Doctor extends Model<IDoctor> implements IDoctor {
   })
   available!: boolean;
 }
+
+// {Tuesday,Wednesday,Thursday,Friday,Monday}
+
+// {
+//   "Friday": [
+//     {
+//       "end": "12:00",
+//       "label": "Morning",
+//       "start": "09:00"
+//     },
+//     {
+//       "end": "17:00",
+//       "label": "Afternoon",
+//       "start": "12:00"
+//     },
+//     {
+//       "end": "18:00",
+//       "label": "Evening",
+//       "start": "17:00"
+//     }
+//   ],
+//   "Monday": [
+//     {
+//       "end": "12:00",
+//       "label": "Morning",
+//       "start": "09:00"
+//     },
+//     {
+//       "end": "13:00",
+//       "label": "Afternoon",
+//       "start": "12:00"
+//     },
+//     {
+//       "end": "20:00",
+//       "label": "Evening",
+//       "start": "15:00"
+//     }
+//   ],
+//   "Tuesday": [
+//     {
+//       "end": "12:00",
+//       "label": "Morning",
+//       "start": "09:00"
+//     }
+//   ],
+//   "Thursday": [
+//     {
+//       "end": "12:00",
+//       "label": "Morning",
+//       "start": "09:00"
+//     },
+//     {
+//       "end": "19:00",
+//       "label": "Evening",
+//       "start": "17:00"
+//     }
+//   ],
+//   "Wednesday": [
+//     {
+//       "end": "12:00",
+//       "label": "Morning",
+//       "start": "10:00"
+//     },
+//     {
+//       "end": "13:00",
+//       "label": "Afternoon",
+//       "start": "12:00"
+//     }
+//   ]
+// }

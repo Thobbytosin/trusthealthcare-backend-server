@@ -5,6 +5,7 @@ import {
   getAllDoctorsList,
   getDoctor,
   getDoctorAvailableSlot,
+  getDoctorMeta,
   getSomeDoctorsUnauthenticated,
   updateDoctor,
   uploadDoctor,
@@ -12,6 +13,7 @@ import {
 import { validateDoctorData } from "../../middlewares/validatedoctorData";
 import { formParser } from "../../middlewares/formParser";
 import { hasDoctorProfileBeenUpdatedLast7days } from "../../middlewares/doctor-auth";
+import { apiKeyAuth } from "../../middlewares/apiKey-auth";
 
 const doctorRouterV1 = Router();
 
@@ -19,6 +21,7 @@ const doctorRouterV1 = Router();
 doctorRouterV1.post(
   "/upload-doctor",
   isUserAuthenticated,
+  apiKeyAuth,
   authorizeUpload("admin", "user"),
   formParser,
   validateDoctorData,
@@ -29,12 +32,18 @@ doctorRouterV1.post(
 doctorRouterV1.get("/get-some-doctors-free", getSomeDoctorsUnauthenticated);
 
 // GET DOCTORS (SEARCH, SORT, FILTER)
-doctorRouterV1.get("/get-all-doctors", isUserAuthenticated, getAllDoctorsList);
+doctorRouterV1.get(
+  "/get-all-doctors",
+  isUserAuthenticated,
+  apiKeyAuth,
+  getAllDoctorsList
+);
 
 // UPDATE A DOCTOR
 doctorRouterV1.put(
   "/update-doctor/:doctor_id",
   isUserAuthenticated,
+  apiKeyAuth,
   hasDoctorProfileBeenUpdatedLast7days,
   formParser,
   validateDoctorData,
@@ -42,13 +51,27 @@ doctorRouterV1.put(
 );
 
 // GET A DOCTOR
-doctorRouterV1.get("/get-doctor/:doctor_id", isUserAuthenticated, getDoctor);
+doctorRouterV1.get(
+  "/get-doctor/:doctor_id",
+  isUserAuthenticated,
+  apiKeyAuth,
+  getDoctor
+);
 
 // GET A DOCTOR AVAILABLE SLOTS
 doctorRouterV1.get(
   "/available-slots/:doctor_id",
   isUserAuthenticated,
+  apiKeyAuth,
   getDoctorAvailableSlot
+);
+
+// GET A DOCTOR META TAGS
+doctorRouterV1.get(
+  "/meta-tags/:doctor_id",
+  isUserAuthenticated,
+  apiKeyAuth,
+  getDoctorMeta
 );
 
 export default doctorRouterV1;

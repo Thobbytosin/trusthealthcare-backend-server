@@ -8,6 +8,7 @@ import {
   hasPasswordChangedLast24Hours,
   isUserAuthenticated,
 } from "../../middlewares/user-auth";
+import { apiKeyAuth } from "../../middlewares/apiKey-auth";
 
 const userRouterV1 = Router();
 
@@ -22,6 +23,6 @@ userRouterV1.post(
 userRouterV1.post("/reset-password", resetPassword);
 
 // GET USER DETAILS
-userRouterV1.get("/me", isUserAuthenticated, getUserData);
+userRouterV1.get("/me", isUserAuthenticated, apiKeyAuth, getUserData);
 
 export default userRouterV1;
