@@ -9,7 +9,6 @@ import { signOut } from "./auth.controller";
 import { logDoctorActivity } from "../utils/helpers";
 import { Sequelize } from "sequelize-typescript";
 import redis from "../utils/redis";
-import { name } from "ejs";
 import { doctorAvailableSlots } from "../services/availableSlots.service";
 
 //////////////////////////////////////////////////////////////////////////////////////////////// UPLOAD DOCTOR
@@ -369,6 +368,19 @@ export const getAllDoctorsList = catchAsyncError(
 // //////////////////////////////////////////////////////////////////////////////////////////////// GET SOME DOCTORS (UNAUTHENTICATED)
 export const getSomeDoctorsUnauthenticated = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
+    const CACHE_KEY = "doctors:list:unauthenticated";
+    const doctorsFromRedis = await redis.get(CACHE_KEY);
+
+    if (doctorsFromRedis) {
+      res.status(200).json({
+        success: true,
+        message: "Doctors data fetched",
+        doctors: JSON.parse(doctorsFromRedis),
+      });
+
+      return;
+    }
+
     const doctors = await Doctor.findAll({
       attributes: {
         exclude: [
@@ -403,6 +415,13 @@ export const getSomeDoctorsUnauthenticated = catchAsyncError(
     });
 
     if (!doctors) return next(new ErrorHandler("No record found", 404));
+
+    await redis.set(
+      CACHE_KEY,
+      JSON.stringify(doctors),
+      "EX",
+      14 * 24 * 60 * 60 // expires in 14days
+    );
 
     res.status(200).json({
       success: true,
@@ -449,6 +468,11 @@ export const getDoctorAvailableSlot = catchAsyncError(
 
     const data: any = await doctorAvailableSlots(doctorId, date, next);
 
+    const selectedDaySlots: {
+      date: string;
+      slots: [{ label: string; availableSlots: string[] }];
+    } = data.selectedDay;
+
     await redis.set(
       `doctor-slots-${doctorId}-${rawDate}`,
       JSON.stringify(data),
@@ -458,7 +482,7 @@ export const getDoctorAvailableSlot = catchAsyncError(
 
     res.status(200).json({
       success: true,
-      availableSlots: data.selectedDay,
+      availableSlots: selectedDaySlots,
     });
   }
 );

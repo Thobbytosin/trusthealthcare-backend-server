@@ -4,14 +4,14 @@
     "experimentalDecorators": true, // for sequelize
     "emitDecoratorMetadata": true, // for sequelize
     "module": "commonjs",
-    "rootDir": "../server", // Where your source code lives
+    "rootDir": "./", // Where your source code lives
     "outDir": "./build", // Where compiled JS should go
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "skipLibCheck": true,
-    "types": ["jest"] // This is fine if you're testing with Jest
+    "skipLibCheck": true
+    // "types": ["jest"] // This is fine if you're testing with Jest
   },
   "include": ["./**/*"], // Files to compile (usually your TS files)
-  "exclude": ["node_modules", "build"] // Folders you DON'T want to compile
+  "exclude": ["node_modules", "tests", "jest.config.ts", "app-test.ts", "docs"] // Folders and Files you DON'T want to compile
 }

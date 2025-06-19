@@ -39,7 +39,7 @@ app.use(
 );
 
 // Health check route above the middlewares
-app.get("/api/v1/health", (req, res) => {
+app.get("/api/v1/health", (tr_host_x, res) => {
   res.status(200).json({ status: "ok" });
 });
 

@@ -29,7 +29,10 @@ doctorRouterV1.post(
 );
 
 // GET SOME DOCTORS (FOR LANDING PAGE)
-doctorRouterV1.get("/get-some-doctors-free", getSomeDoctorsUnauthenticated);
+doctorRouterV1.get(
+  "/doctors-list-unauthenticated",
+  getSomeDoctorsUnauthenticated
+);
 
 // GET DOCTORS (SEARCH, SORT, FILTER)
 doctorRouterV1.get(

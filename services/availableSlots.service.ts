@@ -77,7 +77,7 @@ export const doctorAvailableSlots = async (
   return {
     ...fullSchedule,
     selectedDay: {
-      label: selectedDay,
+      day: selectedDay,
       slots: filteredSelectedSlots,
     },
   };

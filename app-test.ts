@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { registerUser } from "./controllers/user.controller";
 import ErrorMiddleware from "./middlewares/error";
+import { registerUser } from "./controllers/auth.controller";
 
 export const createTestApp = () => {
   const appTest = express();

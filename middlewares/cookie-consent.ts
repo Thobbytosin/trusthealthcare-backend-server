@@ -35,13 +35,13 @@ export const checkCookieConsent = catchAsyncError(
     }
 
     // check for necessary cookie
-    if (consent.necessary === false)
-      return next(
-        new ErrorHandler(
-          "Access denied: Necessary cookies are required to use this feature.",
-          403
-        )
-      );
+    // if (consent.necessary === false)
+    //   return next(
+    //     new ErrorHandler(
+    //       "Access denied: Necessary cookies are required to use this feature.",
+    //       403
+    //     )
+    //   );
 
     req.cookieConsent = consent;
     next();
