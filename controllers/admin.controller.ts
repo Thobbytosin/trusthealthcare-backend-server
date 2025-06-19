@@ -91,7 +91,7 @@ export const doctorApplicationApproval = catchAsyncError(
     if (user.role.some((role) => ["doctor"].includes(role)))
       return next(new ErrorHandler("Your account is already verified", 408));
 
-    user.role = [...user.role, "doctor"];
+    user.role = ["doctor"];
     user.doctorId = doctor.id;
     const updatedUser = await user.save();
 

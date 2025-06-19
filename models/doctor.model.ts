@@ -63,6 +63,7 @@ export interface IDoctor {
   uploadedBy: "doctor" | "admin";
   uploadedById: string;
   available: boolean;
+  createdAt?: Date;
 }
 
 @Table({
