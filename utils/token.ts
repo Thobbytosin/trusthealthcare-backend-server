@@ -13,10 +13,10 @@ const isProduction = process.env.NODE_ENV === "production";
 
 // create the tokens expiration time
 const accessTokenExpiration: any =
-  Number(process.env.ACCESS_TOKEN_EXPIRATION) || 1;
+  Number(process.env.ACCESS_TOKEN_EXPIRATION) || 30; // minutes
 
 const refreshTokenExpiration: any =
-  Number(process.env.REFRESH_TOKEN_EXPIRATION) || 5;
+  Number(process.env.REFRESH_TOKEN_EXPIRATION) || 5; // day
 
 // cookies options
 export const accessTokenOptions: ITokenOptions = {

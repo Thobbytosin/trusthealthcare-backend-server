@@ -14,13 +14,47 @@ import { ApiKey } from "../models/apiKey.model";
 dotenv.config();
 
 // Initialize Sequelize with PostgreSQL
-const sequelize = new Sequelize({
-  database: process.env.DB_NAME,
-  port: parseInt(process.env.DB_PORT || ""),
-  username: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  host: process.env.DB_HOST, // or your database server
-  dialect: "postgres", // Specify PostgreSQL
+// const sequelize = new Sequelize({
+//   database: process.env.DB_NAME,
+//   port: parseInt(process.env.DB_PORT || ""),
+//   username: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD,
+//   host: process.env.DB_HOST, // or your database server
+//   // dialect: "postgres", // Specify PostgreSQL
+//   dialectOptions: {
+//     ssl: {
+//       require: true,
+//       rejectUnauthorized: false, // needed for Neon
+//     },
+//   },
+//   models: [
+//     User,
+//     Doctor,
+//     Appointment,
+//     Patient,
+//     Transaction,
+//     UserActivityLogs,
+//     DoctorActivityLogs,
+//     ApiKey,
+//   ],
+//   logging: false, // Disable logging (optional)
+//   pool: {
+//     max: 1, // Maximum number of connections in the pool
+//     min: 0, // Minimum number of connections in the pool
+//     acquire: 10000, // Maximum time (ms) Sequelize tries to get a connection before throwing an error
+//     idle: 5000, // Time (ms) a connection can be idle before being released
+//   },
+// });
+
+const sequelize = new Sequelize(process.env.DATABASE_URL as string, {
+  dialect: "postgres",
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
+  },
+  logging: false,
   models: [
     User,
     Doctor,
@@ -31,16 +65,12 @@ const sequelize = new Sequelize({
     DoctorActivityLogs,
     ApiKey,
   ],
-  logging: false, // Disable logging (optional)
   pool: {
-    max: 10, // Maximum number of connections in the pool
-    min: 0, // Minimum number of connections in the pool
-    acquire: 30000, // Maximum time (ms) Sequelize tries to get a connection before throwing an error
-    idle: 10000, // Time (ms) a connection can be idle before being released
+    max: 1, // recommended for Neon
+    min: 0,
+    acquire: 10000,
+    idle: 5000,
   },
 });
 
 export default sequelize;
-
-// KEYWORDS
-// SELECT * FROM doctors WHERE city ~* '\mikeja\M';
