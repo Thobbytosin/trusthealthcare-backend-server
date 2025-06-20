@@ -66,10 +66,10 @@ const sequelize = new Sequelize(process.env.DATABASE_URL as string, {
     ApiKey,
   ],
   pool: {
-    max: 1, // recommended for Neon
-    min: 0,
-    acquire: 10000,
-    idle: 5000,
+    max: 5, // or 10 depending on your traffic
+    min: 1,
+    acquire: 30000, // time Sequelize will try to get a connection before throwing error
+    idle: 10000, // how long a connection stays open when idle
   },
 });
 

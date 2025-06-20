@@ -141,16 +141,14 @@ export const accountVerification = catchAsyncError(
     if (userExists)
       return next(new ErrorHandler("Account already exists", 409));
 
-    const encryptedPassword = bcryptjs.hashSync(password, 20);
-
-    await User.create({
+    const user = await User.create({
       name,
       email,
-      password: encryptedPassword,
+      password,
       verified: true,
     });
 
-    const user = await User.findOne({ where: { email } });
+    // const user = await User.findOne({ where: { email } });
 
     if (!user)
       return next(
