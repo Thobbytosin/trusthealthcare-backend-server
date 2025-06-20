@@ -29,14 +29,28 @@ app.use(cookieParser());
 // access to send form data from server
 app.use(express.urlencoded({ extended: false }));
 
-// cors
+const allowedOrigins = [
+  process.env.NODE_ENV === "development" && "http://localhost:3000",
+  "https://trust-healthcare-client.vercel.app",
+].filter(Boolean);
+
+//CORS - cross-origin resource sharing
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     credentials: true,
   })
 );
+
+// cors
+// app.use(
+//   cors({
+//     origin: process.env.CLIENT_URL,
+//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+//     credentials: true,
+//   })
+// );
 
 // Health check route above the middlewares
 app.get("/api/v1/health", (tr_host_x, res) => {
