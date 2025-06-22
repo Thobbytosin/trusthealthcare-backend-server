@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Your Trust Healthcare API Key</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 20px;
+        color: #212529;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        color: #007bff;
+      }
+      .api-key {
+        font-size: 16px;
+        background-color: #f1f3f5;
+        border: 1px dashed #007bff;
+        padding: 12px;
+        margin-top: 10px;
+        word-break: break-all;
+        font-weight: bold;
+        color: #000;
+      }
+      .footer {
+        margin-top: 30px;
+        font-size: 14px;
+        color: #6c757d;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Welcome to Trust Healthcare Developer Platform</h2>
+
+      <p>Hi <%= ownerName %>,</p>
+
+      <p>Thank you for registering your application with Trust Healthcare.</p>
+
+      <p>Your unique API key is:</p>
+
+      <div class="api-key"><%= apiKey %></div>
+
+      <p>
+        Please store this key securely. You’ll need it to authenticate your
+        requests to our API.
+      </p>
+
+      <p>
+        For security reasons, do not share this key publicly. If you believe
+        your key has been compromised, request a new one immediately.
+      </p>
+
+      <div class="footer">
+        Need help? Contact us at
+        <a href="mailto:support@trusthealthcare.com"
+          >support@trusthealthcare.com</a
+        ><br />
+        &copy; <%= new Date().getFullYear() %> Trust Healthcare. All rights
+        reserved.
+      </div>
+    </div>
+  </body>
+</html>
