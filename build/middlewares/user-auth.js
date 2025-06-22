@@ -21,12 +21,12 @@ const user_model_1 = require("../models/user.model");
 dotenv_1.default.config();
 exports.isUserAuthenticated = (0, catchAsyncError_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // check if user is logged in (check and verify access token)
-    const { tr_host_x } = req.cookies;
+    const { TR_HOST_X } = req.cookies;
     // if there is no access token
-    if (!tr_host_x)
+    if (!TR_HOST_X)
         return next(new errorHandler_1.default("Unauthorized: Authentication required.", 401));
     // verify access token
-    const decodeAccess = jsonwebtoken_1.default.verify(tr_host_x, process.env.SIGN_IN_ACCESS_SECRET_KEY || "");
+    const decodeAccess = jsonwebtoken_1.default.verify(TR_HOST_X, process.env.SIGN_IN_ACCESS_SECRET_KEY || "");
     if (!decodeAccess)
         return next(new errorHandler_1.default("Unauthorized: Invalid authentication token", 401));
     req.user = decodeAccess.user;

@@ -252,6 +252,7 @@ exports.signOut = (0, catchAsyncError_1.default)((req, res, next) => __awaiter(v
 //////////////////////////////////////////////////////////////////////////////////////////////// UPDATE TOKEN
 exports.refreshToken = (0, catchAsyncError_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const user = req.user;
+    const { accessToken, loggedInToken, refreshToken } = req.tokens;
     if (user.signedInAs === "user") {
         yield (0, helpers_1.logUserActivity)({
             userId: user.id,
@@ -276,6 +277,9 @@ exports.refreshToken = (0, catchAsyncError_1.default)((req, res, next) => __awai
         success: true,
         message: "Token Refreshed",
         expiresAt: accessTokenExpiresAt,
+        accessToken,
+        refreshToken,
+        loggedInToken,
     });
 }));
 //////////////////////////////////////////////////////////////////////////////////////////////// CLEAR ACCESS TOKEN

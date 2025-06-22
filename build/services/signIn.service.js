@@ -28,9 +28,9 @@ const signInWithCredentials = (statusCode, res, req, next, user) => __awaiter(vo
     const accessTokenExpiresAt = new Date(Date.now() + token_1.accessTokenOptions.maxAge).getTime();
     const loggedInToken = process.env.LOGGED_IN_TOKEN;
     //   save tokens in the response cookie
-    res.cookie("tr_host_x", accessToken, token_1.accessTokenOptions);
-    res.cookie("tc_agent_x", refreshToken, token_1.refreshTokenOptions);
-    res.cookie("_xur_cr-host", loggedInToken, token_1.hasLoggedInTokenOptions);
+    // res.cookie("tr_host_x", accessToken, accessTokenOptions);
+    // res.cookie("tc_agent_x", refreshToken, refreshTokenOptions);
+    // res.cookie("_xur_cr-host", loggedInToken, hasLoggedInTokenOptions);
     if ((user === null || user === void 0 ? void 0 : user.signedInAs) === "user") {
         yield (0, helpers_1.logUserActivity)({
             userId: user.id,
@@ -56,6 +56,9 @@ const signInWithCredentials = (statusCode, res, req, next, user) => __awaiter(vo
         message: "Logged in successfully",
         user,
         expiresAt: accessTokenExpiresAt,
+        accessToken,
+        refreshToken,
+        loggedInToken,
     });
 });
 exports.signInWithCredentials = signInWithCredentials;
