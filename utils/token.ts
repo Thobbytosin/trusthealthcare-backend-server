@@ -7,6 +7,7 @@ interface ITokenOptions {
   httpOnly: boolean;
   sameSite: "none" | "lax" | "strict";
   secure?: boolean;
+  path: string;
 }
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -24,6 +25,7 @@ export const accessTokenOptions: ITokenOptions = {
   httpOnly: true,
   sameSite: isProduction ? "none" : "lax",
   secure: isProduction,
+  path: "/",
 };
 
 export const refreshTokenOptions: ITokenOptions = {
@@ -31,6 +33,7 @@ export const refreshTokenOptions: ITokenOptions = {
   httpOnly: true,
   sameSite: isProduction ? "none" : "lax",
   secure: isProduction,
+  path: "/",
 };
 
 export const hasLoggedInTokenOptions: ITokenOptions = {
@@ -38,6 +41,7 @@ export const hasLoggedInTokenOptions: ITokenOptions = {
   httpOnly: false, // client accessible
   sameSite: isProduction ? "none" : "lax",
   secure: isProduction,
+  path: "/",
 };
 
 export const verificationTokenOptions: ITokenOptions = {
@@ -45,6 +49,7 @@ export const verificationTokenOptions: ITokenOptions = {
   httpOnly: true,
   sameSite: isProduction ? "none" : "lax",
   secure: isProduction,
+  path: "/",
 };
 
 export const resetTokenOptions: ITokenOptions = {
@@ -52,4 +57,5 @@ export const resetTokenOptions: ITokenOptions = {
   httpOnly: true,
   sameSite: isProduction ? "none" : "lax",
   secure: isProduction,
+  path: "/",
 };

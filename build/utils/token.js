@@ -16,28 +16,33 @@ exports.accessTokenOptions = {
     httpOnly: true,
     sameSite: isProduction ? "none" : "lax",
     secure: isProduction,
+    path: "/",
 };
 exports.refreshTokenOptions = {
     maxAge: refreshTokenExpiration * 24 * 60 * 60 * 1000, // days
     httpOnly: true,
     sameSite: isProduction ? "none" : "lax",
     secure: isProduction,
+    path: "/",
 };
 exports.hasLoggedInTokenOptions = {
     maxAge: refreshTokenExpiration * 24 * 60 * 60 * 1000, // days
     httpOnly: false, // client accessible
     sameSite: isProduction ? "none" : "lax",
     secure: isProduction,
+    path: "/",
 };
 exports.verificationTokenOptions = {
     maxAge: 5 * 60 * 1000, // 5 miuntes
     httpOnly: true,
     sameSite: isProduction ? "none" : "lax",
     secure: isProduction,
+    path: "/",
 };
 exports.resetTokenOptions = {
     maxAge: 4 * 60 * 1000, // 4 miuntes
     httpOnly: true,
     sameSite: isProduction ? "none" : "lax",
     secure: isProduction,
+    path: "/",
 };

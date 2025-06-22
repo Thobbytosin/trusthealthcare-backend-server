@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clearAccessToken = exports.refreshToken = exports.signOut = exports.loginUser = exports.resendVerificationCode = exports.accountVerification = exports.registerUser = void 0;
+exports.validateToken = exports.clearAccessToken = exports.refreshToken = exports.signOut = exports.loginUser = exports.resendVerificationCode = exports.accountVerification = exports.registerUser = void 0;
 const catchAsyncError_1 = __importDefault(require("../middlewares/catchAsyncError"));
 const errorHandler_1 = __importDefault(require("../utils/errorHandler"));
 const user_model_1 = require("../models/user.model");
@@ -284,5 +284,12 @@ exports.clearAccessToken = (0, catchAsyncError_1.default)((req, res, next) => __
     res.status(200).json({
         success: true,
         message: "Session Timeout cleared due to inactivity",
+    });
+}));
+//////////////////////////////////////////////////////////////////////////////////////////////// CLEAR ACCESS TOKEN
+exports.validateToken = (0, catchAsyncError_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    res.status(200).json({
+        success: true,
+        message: "Validated",
     });
 }));

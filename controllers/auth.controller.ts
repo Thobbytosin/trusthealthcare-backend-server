@@ -402,3 +402,13 @@ export const clearAccessToken = catchAsyncError(
     });
   }
 );
+
+//////////////////////////////////////////////////////////////////////////////////////////////// CLEAR ACCESS TOKEN
+export const validateToken = catchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    res.status(200).json({
+      success: true,
+      message: "Validated",
+    });
+  }
+);

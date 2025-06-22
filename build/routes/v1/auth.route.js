@@ -19,4 +19,6 @@ authRouterV1.post("/signout", user_auth_1.isUserAuthenticated, auth_controller_1
 authRouterV1.get("/refresh-tokens", updateToken_1.updateToken, auth_controller_1.refreshToken);
 // CLEAR ACCESS TOKEN
 authRouterV1.get("/clear-access-token", auth_controller_1.clearAccessToken);
+// CLEAR ACCESS TOKEN
+authRouterV1.get("/validate-token", user_auth_1.isUserAuthenticated, auth_controller_1.validateToken);
 exports.default = authRouterV1;

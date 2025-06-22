@@ -7,6 +7,7 @@ import {
   registerUser,
   resendVerificationCode,
   signOut,
+  validateToken,
 } from "../../controllers/auth.controller";
 import { isUserAuthenticated } from "../../middlewares/user-auth";
 import { updateToken } from "../../middlewares/updateToken";
@@ -33,5 +34,8 @@ authRouterV1.get("/refresh-tokens", updateToken, refreshToken);
 
 // CLEAR ACCESS TOKEN
 authRouterV1.get("/clear-access-token", clearAccessToken);
+
+// CLEAR ACCESS TOKEN
+authRouterV1.get("/validate-token", isUserAuthenticated, validateToken);
 
 export default authRouterV1;
