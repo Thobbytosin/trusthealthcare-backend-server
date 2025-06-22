@@ -10,17 +10,17 @@ dotenv.config();
 export const isUserAuthenticated = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     // check if user is logged in (check and verify access token)
-    const { tr_host_x } = req.cookies;
+    const { TR_HOST_X } = req.cookies;
 
     // if there is no access token
-    if (!tr_host_x)
+    if (!TR_HOST_X)
       return next(
         new ErrorHandler("Unauthorized: Authentication required.", 401)
       );
 
     // verify access token
     const decodeAccess: any = jwt.verify(
-      tr_host_x,
+      TR_HOST_X,
       (process.env.SIGN_IN_ACCESS_SECRET_KEY as string) || ""
     );
 

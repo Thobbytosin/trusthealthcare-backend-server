@@ -9,6 +9,11 @@ declare global {
   namespace Express {
     interface Request {
       cookieConsent: CookieConsentType;
+      tokens: {
+        accessToken: string;
+        refreshToken: string;
+        loggedInToken: string;
+      };
       user: IUser;
       doctor: IDoctor;
       files: { [key: string]: File | File[] };

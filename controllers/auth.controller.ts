@@ -359,6 +359,7 @@ export const signOut = catchAsyncError(
 export const refreshToken = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
+    const { accessToken, loggedInToken, refreshToken } = req.tokens;
 
     if (user.signedInAs === "user") {
       await logUserActivity({
@@ -387,6 +388,9 @@ export const refreshToken = catchAsyncError(
       success: true,
       message: "Token Refreshed",
       expiresAt: accessTokenExpiresAt,
+      accessToken,
+      refreshToken,
+      loggedInToken,
     });
   }
 );
