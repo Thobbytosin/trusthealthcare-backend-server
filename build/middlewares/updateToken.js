@@ -18,10 +18,10 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 exports.updateToken = (0, catchAsyncError_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    // fetch the refrsh token from the request cookies
-    const { tc_agent_x } = req.cookies;
+    // fetch the refresh token from the request cookies
+    const { TC_AGENT_X } = req.cookies;
     // verify if token is valid
-    const decode = jsonwebtoken_1.default.verify(tc_agent_x, process.env.SIGN_IN_REFRESH_SECRET_KEY);
+    const decode = jsonwebtoken_1.default.verify(TC_AGENT_X, process.env.SIGN_IN_REFRESH_SECRET_KEY);
     // NOTE: jwt will return an error if tc_agent_x has expired. No need to check
     const user = decode.user;
     // generate a new access and refresh tokens
