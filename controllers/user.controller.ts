@@ -12,7 +12,8 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { sendMail } from "../utils/sendMail";
 import { resetTokenOptions } from "../utils/token";
-import redis from "../utils/redis";
+import redis from "../config/redis";
+import { getCachedUser, setCachedUser } from "../services/cache.service";
 
 dotenv.config();
 
@@ -134,19 +135,19 @@ export const getUserData = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user.id;
 
-    const cachedData = await redis.get(`user - ${userId}`);
+    let user = await getCachedUser(userId);
 
-    // if the data is in redis, no need to fetch from progressSql
-    if (cachedData) {
-      res.status(200).json({ success: true, user: JSON.parse(cachedData) });
-    } else {
-      const user = await User.findByPk(userId);
-      if (!user)
+    if (!user) {
+      user = await User.findByPk(userId);
+      if (!user) {
         return next(
           new ErrorHandler("Not Found: User Account does not exist", 404)
         );
+      }
 
-      res.status(200).json({ success: true, user });
+      await setCachedUser(userId, user);
     }
+
+    res.status(200).json({ success: true, user });
   }
 );

@@ -7,8 +7,8 @@ import {
   refreshTokenOptions,
 } from "../utils/token";
 import { logDoctorActivity, logUserActivity } from "../utils/helpers";
-import redis from "../utils/redis";
 import dotenv from "dotenv";
+import { setCachedUser } from "./cache.service";
 
 dotenv.config();
 
@@ -63,14 +63,7 @@ export const signInWithCredentials = async (
     });
   }
 
-  // save user to redis
-  await redis.set(
-    `user - ${user?.id}`,
-    JSON.stringify(user),
-    "EX",
-    14 * 24 * 60 * 60
-  ); // delete after 14 days (14x24x60x60)
-  // await redis.set(user.id, JSON.stringify(user), 'EX', 3600) //  expiring in 1 hour
+  await setCachedUser(user.id, user);
 
   // send response to the client
   res.status(statusCode).json({

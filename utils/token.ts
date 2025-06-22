@@ -41,7 +41,7 @@ export const hasLoggedInTokenOptions: ITokenOptions = {
 };
 
 export const verificationTokenOptions: ITokenOptions = {
-  maxAge: 4 * 60 * 1000, // 4 miuntes
+  maxAge: 5 * 60 * 1000, // 5 miuntes
   httpOnly: true,
   sameSite: isProduction ? "none" : "lax",
   secure: isProduction,

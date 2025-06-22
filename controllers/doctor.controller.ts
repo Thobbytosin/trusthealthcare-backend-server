@@ -8,8 +8,18 @@ import { User } from "../models/user.model";
 import { signOut } from "./auth.controller";
 import { logDoctorActivity } from "../utils/helpers";
 import { Sequelize } from "sequelize-typescript";
-import redis from "../utils/redis";
 import { doctorAvailableSlots } from "../services/availableSlots.service";
+import {
+  getCachedDoctor,
+  getCachedDoctors,
+  getCachedMetaTags,
+  getCachedSlots,
+  setCachedDoctor,
+  setCachedDoctors,
+  setCachedMetaTags,
+  setCachedSlots,
+} from "../services/cache.service";
+import { format } from "date-fns";
 
 //////////////////////////////////////////////////////////////////////////////////////////////// UPLOAD DOCTOR
 export const uploadDoctor = catchAsyncError(
@@ -98,37 +108,6 @@ export const uploadDoctor = catchAsyncError(
       next,
     });
 
-    const updatedDoctor = {
-      id: doctor?.id,
-      name: doctor?.name,
-      email: doctor?.email,
-      specialization: doctor?.specialization,
-      workExperience: doctor?.workExperience,
-      yearsOfExperience: doctor?.yearsOfExperience,
-      education: doctor?.education,
-      hospital: doctor?.hospital,
-      certifications: doctor?.certifications,
-      availableDays: doctor?.availableDays,
-      timeSlots: doctor?.timeSlots,
-      city: doctor?.city,
-      state: doctor?.state,
-      ratings: doctor?.ratings,
-      reviews: doctor?.reviews,
-      maxPatientsPerDay: doctor?.maxPatientsPerDay,
-      about: doctor?.about,
-      image: doctor?.image,
-      verificationStatus: doctor?.verificationStatus,
-      available: doctor?.available,
-    };
-
-    // save doctor to redis
-    await redis.set(
-      `doctor - ${doctor.id}`,
-      JSON.stringify(updatedDoctor),
-      "EX",
-      14 * 24 * 60 * 60 // 14 days
-    );
-
     res.status(201).json({
       success: true,
       message:
@@ -143,6 +122,8 @@ export const updateDoctor = catchAsyncError(
     const data = req.body; // edited fields
     const doctorId = req.doctor.id;
     const doctor = await Doctor.findByPk(doctorId);
+
+    if (!doctor) return next(new ErrorHandler("Doctor not found", 404));
 
     await doctor?.update({ ...data });
 
@@ -170,12 +151,7 @@ export const updateDoctor = catchAsyncError(
     };
 
     // save doctor to redis
-    await redis.set(
-      `doctor - ${updatedDoctor.id}`,
-      JSON.stringify(updatedDoctor),
-      "EX",
-      14 * 24 * 60 * 60 // 14 days
-    );
+    await setCachedDoctor(updatedDoctor.id, updatedDoctor);
 
     res.status(201).json({
       success: true,
@@ -188,55 +164,23 @@ export const updateDoctor = catchAsyncError(
 export const getDoctor = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const doctorId = req.params.doctor_id;
-    // const cachedDoctor = await redis.get(`doctor - ${doctorId}`);
-    const cachedDoctor = false;
 
-    if (cachedDoctor) {
-      res.status(200).json({
-        success: true,
-        message: "Doctor Information retrieved",
-        doctor: JSON.parse(cachedDoctor),
-      });
-    } else {
-      const doctor: any = await Doctor.findOne({
-        where: { id: doctorId },
-        attributes: {
-          exclude: [
-            "securityAnswer",
-            "securityQuestion",
-            "phone",
-            "altPhone",
-            "hospital",
-            "thumbnail",
-            "zipCode",
-            "createdAt",
-            "updatedAt",
-            "licenseNumber",
-            "holidays",
-            "appointments",
-            "uploadedBy",
-            "userId",
-          ],
-        },
-      });
+    let doctor = await getCachedDoctor(doctorId);
 
-      if (!doctor)
-        return next(new ErrorHandler("Error: Doctor not found", 404));
+    if (!doctor) {
+      doctor = await Doctor.findByPk(doctorId);
+      if (!doctor) {
+        return next(new ErrorHandler("Not Found: Doctor does not exist", 404));
+      }
 
-      // save doctor to redis
-      await redis.set(
-        `doctor - ${doctor.id}`,
-        JSON.stringify(doctor),
-        "EX",
-        14 * 24 * 60 * 60 // 14 days
-      );
-
-      res.status(200).json({
-        success: true,
-        message: "Doctor Information retrieved",
-        doctor,
-      });
+      await setCachedDoctor(doctorId, doctor);
     }
+
+    res.status(200).json({
+      success: true,
+      message: "Doctor Information retrieved",
+      doctor,
+    });
   }
 );
 
@@ -368,60 +312,47 @@ export const getAllDoctorsList = catchAsyncError(
 // //////////////////////////////////////////////////////////////////////////////////////////////// GET SOME DOCTORS (UNAUTHENTICATED)
 export const getSomeDoctorsUnauthenticated = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const CACHE_KEY = "doctors:list:unauthenticated";
-    const doctorsFromRedis = await redis.get(CACHE_KEY);
+    let doctors = await getCachedDoctors();
 
-    if (doctorsFromRedis) {
-      res.status(200).json({
-        success: true,
-        message: "Doctors data fetched",
-        doctors: JSON.parse(doctorsFromRedis),
+    if (!doctors) {
+      doctors = await Doctor.findAll({
+        attributes: {
+          exclude: [
+            "securityAnswer",
+            "phone",
+            "altPhone",
+            "hospital",
+            "email",
+            "education",
+            "licenseNumber",
+            "certifications",
+            "availableDays",
+            "timeSlots",
+            "appointments",
+            "holidays",
+            "reviews",
+            "maxPatientsPerDay",
+            "city",
+            "state",
+            "zipCode",
+            "uploadedBy",
+            "userId",
+            "workExperience",
+            "createdAt",
+            "updatedAt",
+            "securityQuestion",
+            "thumbnail",
+          ],
+        },
+        offset: 0,
+        limit: 4,
       });
+      if (!doctors) {
+        return next(new ErrorHandler("No record found", 404));
+      }
 
-      return;
+      await setCachedDoctors(doctors);
     }
-
-    const doctors = await Doctor.findAll({
-      attributes: {
-        exclude: [
-          "securityAnswer",
-          "phone",
-          "altPhone",
-          "hospital",
-          "email",
-          "education",
-          "licenseNumber",
-          "certifications",
-          "availableDays",
-          "timeSlots",
-          "appointments",
-          "holidays",
-          "reviews",
-          "maxPatientsPerDay",
-          "city",
-          "state",
-          "zipCode",
-          "uploadedBy",
-          "userId",
-          "workExperience",
-          "createdAt",
-          "updatedAt",
-          "securityQuestion",
-          "thumbnail",
-        ],
-      },
-      offset: 0,
-      limit: 4,
-    });
-
-    if (!doctors) return next(new ErrorHandler("No record found", 404));
-
-    await redis.set(
-      CACHE_KEY,
-      JSON.stringify(doctors),
-      "EX",
-      14 * 24 * 60 * 60 // expires in 14days
-    );
 
     res.status(200).json({
       success: true,
@@ -437,6 +368,11 @@ export const getDoctorAvailableSlot = catchAsyncError(
     const doctorId = req.params.doctor_id;
     const rawDate = req.query.date as string;
 
+    if (!doctorId || !rawDate)
+      return next(
+        new ErrorHandler("Doctor available slots not available", 400)
+      );
+
     if (rawDate === "none") {
       res.status(200).json({
         success: true,
@@ -446,43 +382,20 @@ export const getDoctorAvailableSlot = catchAsyncError(
     }
 
     const date = new Date(rawDate);
+    const formattedDate = format(date, "dd MMM yyyy");
 
-    // const cachedDoctorSlots: any = false;
-    const cachedDoctorSlots: any = await redis.get(
-      `doctor-slots-${doctorId}-${rawDate}`
-    );
+    let availableSlots = await getCachedSlots(doctorId, formattedDate);
 
-    if (cachedDoctorSlots) {
-      const parsedSlots = JSON.parse(cachedDoctorSlots);
-      res.status(200).json({
-        success: true,
-        availableSlots: parsedSlots.selectedDay,
-      });
-      return;
+    if (!availableSlots) {
+      availableSlots = await doctorAvailableSlots(doctorId, date, next);
+
+      if (availableSlots)
+        await setCachedSlots(doctorId, availableSlots, formattedDate);
     }
-
-    if (!doctorId || !rawDate)
-      return next(
-        new ErrorHandler("Doctor available slots not available", 400)
-      );
-
-    const data: any = await doctorAvailableSlots(doctorId, date, next);
-
-    const selectedDaySlots: {
-      date: string;
-      slots: [{ label: string; availableSlots: string[] }];
-    } = data.selectedDay;
-
-    await redis.set(
-      `doctor-slots-${doctorId}-${rawDate}`,
-      JSON.stringify(data),
-      "EX",
-      14 * 24 * 60 * 60 // expires in 14days
-    );
 
     res.status(200).json({
       success: true,
-      availableSlots: selectedDaySlots,
+      availableSlots: availableSlots.selectedDay,
     });
   }
 );
@@ -491,17 +404,10 @@ export const getDoctorAvailableSlot = catchAsyncError(
 export const getDoctorMeta = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const doctorId = req.params.doctor_id;
-    const cachedTags = await redis.get(`doctorMeta - ${doctorId}`);
-    // const cachedTags = false;
 
-    if (cachedTags) {
-      const doctor = JSON.parse(cachedTags);
-      res.status(200).json({
-        success: true,
-        message: "Doctor meta tags received",
-        tags: { name: doctor.name, specialty: doctor.specialization },
-      });
-    } else {
+    let tags = await getCachedMetaTags(doctorId);
+
+    if (!tags) {
       const doctor: any = await Doctor.findOne({
         where: { id: doctorId },
       });
@@ -509,19 +415,15 @@ export const getDoctorMeta = catchAsyncError(
       if (!doctor)
         return next(new ErrorHandler("Error: Doctor not found", 404));
 
-      // save doctor to redis
-      await redis.set(
-        `doctorMeta - ${doctor.id}`,
-        JSON.stringify(doctor),
-        "EX",
-        14 * 24 * 60 * 60 // 14 days
-      );
+      tags = { name: doctor.name, specialty: doctor.specialization };
 
-      res.status(200).json({
-        success: true,
-        message: "Doctor meta tags received",
-        tags: { name: doctor.name, specialty: doctor.specialization },
-      });
+      await setCachedMetaTags(doctorId, tags);
     }
+
+    res.status(200).json({
+      success: true,
+      message: "Doctor meta tags received",
+      tags,
+    });
   }
 );

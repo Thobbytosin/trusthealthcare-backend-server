@@ -10,7 +10,6 @@ import {
 } from "../../controllers/auth.controller";
 import { isUserAuthenticated } from "../../middlewares/user-auth";
 import { updateToken } from "../../middlewares/updateToken";
-import { apiKeyAuth } from "../../middlewares/apiKey-auth";
 
 const authRouterV1 = Router();
 

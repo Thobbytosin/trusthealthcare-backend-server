@@ -1,9 +1,11 @@
 import sequelize from "../config/pg-database";
+import { setDatabaseConnected } from "./dbStatus";
 
 // Function to sync models with the database
 export const syncDatabase = async () => {
   try {
     await sequelize.authenticate(); // Test connection
+    setDatabaseConnected(true);
     console.log("✅ Database connected successfully");
 
     await sequelize.sync({ alter: true }); // Sync models (creates tables)

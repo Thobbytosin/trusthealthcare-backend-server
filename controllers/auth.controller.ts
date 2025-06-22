@@ -15,7 +15,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { sendMail } from "../utils/sendMail";
 import { accessTokenOptions, verificationTokenOptions } from "../utils/token";
-import redis from "../utils/redis";
+import redis from "../config/redis";
 import { signInWithCredentials } from "../services/signIn.service";
 import { ApiKey } from "../models/apiKey.model";
 
@@ -349,7 +349,7 @@ export const signOut = catchAsyncError(
     res.clearCookie("has_logged_in");
 
     // delete user from db
-    await redis.del(`user - ${loggedInUser.id}`);
+    await redis?.del(`user - ${loggedInUser.id}`);
 
     res.status(200).json({ success: true, message: "Signed out" });
   }

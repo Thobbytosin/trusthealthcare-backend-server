@@ -15,6 +15,7 @@ import swaggerDocument from "./docs/swaggerDocument";
 import apiKeyRouterV1 from "./routes/v1/apiKey.route";
 import { apiKeyAuth } from "./middlewares/apiKey-auth";
 import { isUserAuthenticated } from "./middlewares/user-auth";
+import { getDatabaseStatus } from "./utils/dbStatus";
 
 export const app = express();
 
@@ -43,18 +44,18 @@ app.use(
   })
 );
 
-// cors
-// app.use(
-//   cors({
-//     origin: process.env.CLIENT_URL,
-//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-//     credentials: true,
-//   })
-// );
-
 // Health check route above the middlewares
-app.get("/api/v1/health", (tr_host_x, res) => {
-  res.status(200).json({ status: "ok" });
+app.get("/api/v1/health", (_, res: any) => {
+  // const dbConnected = false;
+  const dbConnected = getDatabaseStatus();
+
+  if (dbConnected) {
+    console.log("✅✅ DB UP AND RUNNING ✅✅");
+    return res.status(200).json({ status: "ok", database: "connected" });
+  } else {
+    console.log("❌❌ DB DOWN");
+    return res.status(503).json({ status: "error", database: "disconnected" });
+  }
 });
 
 // request for api key
