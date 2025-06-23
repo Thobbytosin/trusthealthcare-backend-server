@@ -13,11 +13,11 @@ dotenv.config();
 export const updateToken = catchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     // fetch the refresh token from the request cookies
-    const { TC_AGENT_X } = req.cookies;
+    const { tc_agent_x } = req.cookies;
 
     // verify if token is valid
     const decode = jwt.verify(
-      TC_AGENT_X,
+      tc_agent_x,
       process.env.SIGN_IN_REFRESH_SECRET_KEY as string
     ) as { user: any };
 
@@ -47,9 +47,9 @@ export const updateToken = catchAsyncError(
     const loggedInToken = process.env.LOGGED_IN_TOKEN || "";
 
     //   save tokens in the response cookie
-    // res.cookie("tr_host_x", accessToken, accessTokenOptions);
-    // res.cookie("tc_agent_x", refreshToken, refreshTokenOptions);
-    // res.cookie("_xur_cr-host", loggedInToken, hasLoggedInTokenOptions);
+    res.cookie("tr_host_x", accessToken, accessTokenOptions);
+    res.cookie("tc_agent_x", refreshToken, refreshTokenOptions);
+    res.cookie("_xur_cr_host", loggedInToken, hasLoggedInTokenOptions);
 
     req.tokens = { accessToken, loggedInToken, refreshToken };
     req.user = user;

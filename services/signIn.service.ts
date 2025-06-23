@@ -41,9 +41,9 @@ export const signInWithCredentials = async (
   const loggedInToken = process.env.LOGGED_IN_TOKEN;
 
   //   save tokens in the response cookie
-  // res.cookie("tr_host_x", accessToken, accessTokenOptions);
-  // res.cookie("tc_agent_x", refreshToken, refreshTokenOptions);
-  // res.cookie("_xur_cr-host", loggedInToken, hasLoggedInTokenOptions);
+  res.cookie("tr_host_x", accessToken, accessTokenOptions);
+  res.cookie("tc_agent_x", refreshToken, refreshTokenOptions);
+  res.cookie("_xur_cr_host", loggedInToken, hasLoggedInTokenOptions);
 
   if (user?.signedInAs === "user") {
     await logUserActivity({
