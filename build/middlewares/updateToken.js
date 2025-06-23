@@ -16,12 +16,13 @@ exports.updateToken = void 0;
 const catchAsyncError_1 = __importDefault(require("./catchAsyncError"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const token_1 = require("../utils/token");
 dotenv_1.default.config();
 exports.updateToken = (0, catchAsyncError_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // fetch the refresh token from the request cookies
-    const { TC_AGENT_X } = req.cookies;
+    const { tc_agent_x } = req.cookies;
     // verify if token is valid
-    const decode = jsonwebtoken_1.default.verify(TC_AGENT_X, process.env.SIGN_IN_REFRESH_SECRET_KEY);
+    const decode = jsonwebtoken_1.default.verify(tc_agent_x, process.env.SIGN_IN_REFRESH_SECRET_KEY);
     // NOTE: jwt will return an error if tc_agent_x has expired. No need to check
     const user = decode.user;
     // generate a new access and refresh tokens
@@ -33,9 +34,9 @@ exports.updateToken = (0, catchAsyncError_1.default)((req, res, next) => __await
     });
     const loggedInToken = process.env.LOGGED_IN_TOKEN || "";
     //   save tokens in the response cookie
-    // res.cookie("tr_host_x", accessToken, accessTokenOptions);
-    // res.cookie("tc_agent_x", refreshToken, refreshTokenOptions);
-    // res.cookie("_xur_cr-host", loggedInToken, hasLoggedInTokenOptions);
+    res.cookie("tr_host_x", accessToken, token_1.accessTokenOptions);
+    res.cookie("tc_agent_x", refreshToken, token_1.refreshTokenOptions);
+    res.cookie("_xur_cr_host", loggedInToken, token_1.hasLoggedInTokenOptions);
     req.tokens = { accessToken, loggedInToken, refreshToken };
     req.user = user;
     next();
