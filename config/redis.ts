@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import dotenv from "dotenv";
+import { setRedisConnected } from "../utils/dbStatus";
 
 dotenv.config();
 
@@ -36,11 +37,13 @@ const connectRedis = async () => {
       client.disconnect();
       redis = null;
       isRedisConnected = false;
+      setRedisConnected(false);
     });
   } catch (err) {
     console.error("❌ Redis connection failed:", (err as Error).message);
     client.disconnect();
     redis = null;
+    setRedisConnected(false);
     isRedisConnected = false;
   }
 };

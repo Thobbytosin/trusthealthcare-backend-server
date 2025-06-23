@@ -19,12 +19,12 @@ const dbStatus_1 = require("./dbStatus");
 const syncDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield pg_database_1.default.authenticate(); // Test connection
-        (0, dbStatus_1.setDatabaseConnected)(true);
         console.log("✅ Database connected successfully");
         yield pg_database_1.default.sync({ alter: true }); // Sync models (creates tables)
         // console.log("✅ Tables created/updated successfully");
     }
     catch (error) {
+        (0, dbStatus_1.setDatabaseConnected)(false);
         console.error("❌ Database sync error:", error);
     }
 });

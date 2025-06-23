@@ -5,12 +5,12 @@ import { setDatabaseConnected } from "./dbStatus";
 export const syncDatabase = async () => {
   try {
     await sequelize.authenticate(); // Test connection
-    setDatabaseConnected(true);
     console.log("✅ Database connected successfully");
 
     await sequelize.sync({ alter: true }); // Sync models (creates tables)
     // console.log("✅ Tables created/updated successfully");
   } catch (error) {
+    setDatabaseConnected(false);
     console.error("❌ Database sync error:", error);
   }
 };
