@@ -22,6 +22,7 @@ dotenv_1.default.config();
 exports.isUserAuthenticated = (0, catchAsyncError_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // check if user is logged in (check and verify access token)
     const { TR_HOST_X } = req.cookies;
+    console.log(req.cookies);
     // if there is no access token
     if (!TR_HOST_X)
         return next(new errorHandler_1.default("Unauthorized: Authentication required.", 401));

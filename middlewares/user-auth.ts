@@ -12,6 +12,8 @@ export const isUserAuthenticated = catchAsyncError(
     // check if user is logged in (check and verify access token)
     const { TR_HOST_X } = req.cookies;
 
+    console.log(req.cookies);
+
     // if there is no access token
     if (!TR_HOST_X)
       return next(
